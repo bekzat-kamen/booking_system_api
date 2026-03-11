@@ -2,33 +2,65 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/bekzat-kamen/booking_system_api/internal/config"
+	"github.com/bekzat-kamen/booking_system_api/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Gin router
+	cfg := config.Load()
+	log.Printf("📦 Loaded config: APP_ENV=%s, APP_PORT=%s", cfg.AppEnv, cfg.AppPort)
+
+	if cfg.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	dbConfig := database.DBConfig{
+		Host:     cfg.DBHost,
+		Port:     cfg.DBPort,
+		User:     cfg.DBUser,
+		Password: cfg.DBPassword,
+		DBName:   cfg.DBName,
+	}
+
+	db, err := database.NewPostgresConnection(dbConfig)
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to database: %v", err)
+	}
+	defer database.Close(db)
+	log.Println("🗄️ Database connection established")
+
 	r := gin.Default()
 
-	// Test endpoint
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Booking System API is running! 🎫",
-			"status":  "ok",
+			"message": "🎫 Booking System API",
+			"env":     cfg.AppEnv,
+			"status":  "running",
 		})
 	})
 
-	// Health check
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "healthy"})
+
+		if err := db.Ping(); err != nil {
+			c.JSON(500, gin.H{
+				"status":  "unhealthy",
+				"message": "Database connection failed",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"status":   "healthy",
+			"database": "connected",
+		})
 	})
 
-	// Start server
-	addr := ":8080"
+	addr := ":" + cfg.AppPort
 	log.Printf("🚀 Server starting on http://localhost%s", addr)
 
-	if err := http.ListenAndServe(addr, r); err != nil {
-		log.Fatal(err)
+	if err := r.Run(addr); err != nil {
+		log.Fatalf("❌ Failed to start server: %v", err)
 	}
 }
