@@ -14,5 +14,4 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_status ON users(status);
 
--- Комментарий
 COMMENT ON TABLE users IS 'Пользователи системы';
