@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	_ "time"
+	"time"
 
 	"github.com/bekzat-kamen/booking_system_api/internal/model"
 	"github.com/bekzat-kamen/booking_system_api/internal/repository"
@@ -16,11 +16,21 @@ var (
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
+	userRepo   *repository.UserRepository
+	jwtService *JWTService
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
-	return &AuthService{userRepo: userRepo}
+type LoginResponse struct {
+	User         *model.User `json:"user"`
+	AccessToken  string      `json:"access_token"`
+	RefreshToken string      `json:"refresh_token"`
+}
+
+func NewAuthService(userRepo *repository.UserRepository, jwtService *JWTService) *AuthService {
+	return &AuthService{
+		userRepo:   userRepo,
+		jwtService: jwtService,
+	}
 }
 
 func (s *AuthService) Register(ctx context.Context, req *model.CreateUserRequest) (*model.User, error) {
@@ -56,7 +66,7 @@ func (s *AuthService) Register(ctx context.Context, req *model.CreateUserRequest
 	return user, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*model.User, error) {
+func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*LoginResponse, error) {
 
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
@@ -73,8 +83,21 @@ func (s *AuthService) Login(ctx context.Context, req *model.LoginRequest) (*mode
 		return nil, ErrInvalidCredentials
 	}
 
+	accessToken, refreshToken, err := s.jwtService.GenerateTokens(
+		user.ID,
+		user.Email,
+		string(user.Role),
+	)
+
+	if err != nil {
+		return nil, errors.New("failed to generate access token")
+	}
 	user.PasswordHash = ""
-	return user, nil
+	return &LoginResponse{
+		User:         user,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 func (s *AuthService) GetProfile(ctx context.Context, userID uuid.UUID) (*model.User, error) {
@@ -85,4 +108,32 @@ func (s *AuthService) GetProfile(ctx context.Context, userID uuid.UUID) (*model.
 
 	user.PasswordHash = ""
 	return user, nil
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*LoginResponse, error) {
+	newAccess, newRefresh, err := s.jwtService.RefreshTokens(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := s.jwtService.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.userRepo.GetByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+
+	user.PasswordHash = ""
+	return &LoginResponse{
+		User:         user,
+		AccessToken:  newAccess,
+		RefreshToken: newRefresh,
+	}, nil
 }

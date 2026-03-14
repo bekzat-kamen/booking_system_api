@@ -6,22 +6,21 @@ import (
 	"github.com/bekzat-kamen/booking_system_api/internal/config"
 	"github.com/bekzat-kamen/booking_system_api/internal/database"
 	"github.com/bekzat-kamen/booking_system_api/internal/handler"
+	"github.com/bekzat-kamen/booking_system_api/internal/middleware"
 	"github.com/bekzat-kamen/booking_system_api/internal/repository"
 	"github.com/bekzat-kamen/booking_system_api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// 1. Конфигурация
+
 	cfg := config.Load()
 	log.Printf("📦 Loaded config: APP_ENV=%s, APP_PORT=%s", cfg.AppEnv, cfg.AppPort)
 
-	// 2. Режим Gin
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 3. БД
 	dbConfig := database.DBConfig{
 		Host:     cfg.DBHost,
 		Port:     cfg.DBPort,
@@ -36,9 +35,18 @@ func main() {
 	}
 	defer database.Close(db)
 	log.Println("🗄️ Database connection established")
+	jwtService, err := service.NewJWTService(
+		cfg.JWTSecret,
+		cfg.JWTRefreshSecret,
+		cfg.JWTExpire,
+		cfg.JWTRefreshExpire,
+	)
+	if err != nil {
+		log.Fatalf("❌ Failed to create JWT service: %v", err)
+	}
 
 	userRepo := repository.NewUserRepository(db)
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, jwtService)
 	authHandler := handler.NewAuthHandler(authService)
 
 	r := gin.Default()
@@ -49,6 +57,9 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.RefreshToken)
+
+			auth.GET("/profile", middleware.AuthMiddleware(jwtService), authHandler.GetProfile)
 		}
 	}
 

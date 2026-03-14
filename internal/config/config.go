@@ -8,17 +8,19 @@ import (
 )
 
 type Config struct {
-	AppPort    string
-	AppEnv     string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	RedisHost  string
-	RedisPort  string
-	JWTSecret  string
-	JWTExpire  string
+	AppPort          string
+	AppEnv           string
+	DBHost           string
+	DBPort           string
+	DBUser           string
+	DBPassword       string
+	DBName           string
+	RedisHost        string
+	RedisPort        string
+	JWTSecret        string
+	JWTExpire        string
+	JWTRefreshSecret string
+	JWTRefreshExpire string
 }
 
 func Load() *Config {
@@ -28,17 +30,19 @@ func Load() *Config {
 	}
 
 	return &Config{
-		AppPort:    getEnv("APP_PORT", "8080"),
-		AppEnv:     getEnv("APP_ENV", "development"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "ticket_booking"),
-		RedisHost:  getEnv("REDIS_HOST", "localhost"),
-		RedisPort:  getEnv("REDIS_PORT", "6379"),
-		JWTSecret:  getEnv("JWT_SECRET", "change-me-in-production"),
-		JWTExpire:  getEnv("JWT_EXPIRE", "15m"),
+		AppPort:          getEnv("APP_PORT", "8080"),
+		AppEnv:           getEnv("APP_ENV", "development"),
+		DBHost:           getEnv("DB_HOST", "localhost"),
+		DBPort:           getEnv("DB_PORT", "5432"),
+		DBUser:           getEnv("DB_USER", "postgres"),
+		DBPassword:       getEnv("DB_PASSWORD", "postgres"),
+		DBName:           getEnv("DB_NAME", "ticket_booking"),
+		RedisHost:        getEnv("REDIS_HOST", "localhost"),
+		RedisPort:        getEnv("REDIS_PORT", "6379"),
+		JWTSecret:        getEnv("JWT_SECRET", "change-me-in-production"),
+		JWTExpire:        getEnv("JWT_EXPIRE", "15m"),
+		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", "change-me-refresh-secret"),
+		JWTRefreshExpire: getEnv("JWT_REFRESH_EXP", "168h"),
 	}
 }
 
