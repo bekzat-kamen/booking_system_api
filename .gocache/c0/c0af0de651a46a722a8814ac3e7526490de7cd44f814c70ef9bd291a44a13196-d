@@ -1,7 +1,0 @@
-./auth_service.go
-./booking_service.go
-./event_service.go
-./jwt_service.go
-./payment_service.go
-./promocode_service.go
-./seat_service.go
