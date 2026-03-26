@@ -48,6 +48,9 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	authService := service.NewAuthService(userRepo, jwtService)
 	authHandler := handler.NewAuthHandler(authService)
+	eventRepo := repository.NewEventRepository(db)
+	eventService := service.NewEventService(eventRepo)
+	eventHandler := handler.NewEventHandler(eventService)
 
 	r := gin.Default()
 
@@ -65,6 +68,17 @@ func main() {
 		api.PUT("/profile", middleware.AuthMiddleware(jwtService), authHandler.UpdateProfile)
 		api.DELETE("/profile", middleware.AuthMiddleware(jwtService), authHandler.DeactivateProfile)
 		api.POST("/change-password", middleware.AuthMiddleware(jwtService), authHandler.ChangePassword)
+
+		events := api.Group("/events")
+		{
+			events.GET("", eventHandler.GetAll)
+			events.GET("/organizer", middleware.AuthMiddleware(jwtService), eventHandler.GetByOrganizer)
+			events.GET("/:id", eventHandler.GetByID)
+			events.POST("", middleware.AuthMiddleware(jwtService), eventHandler.Create)
+			events.POST("/:id/publish", middleware.AuthMiddleware(jwtService), eventHandler.PublishEvent)
+			events.PUT("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Update)
+			events.DELETE("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Delete)
+		}
 	}
 
 	r.GET("/health", func(c *gin.Context) {
