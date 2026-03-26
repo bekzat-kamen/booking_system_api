@@ -57,6 +57,9 @@ func main() {
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingService := service.NewBookingService(bookingRepo, seatRepo, eventRepo)
 	bookingHandler := handler.NewBookingHandler(bookingService)
+	paymentRepo := repository.NewPaymentRepository(db)
+	paymentService := service.NewPaymentService(paymentRepo, bookingRepo, bookingService)
+	paymentHandler := handler.NewPaymentHandler(paymentService)
 
 	r := gin.Default()
 
@@ -100,6 +103,16 @@ func main() {
 			bookings.POST("/:id/cancel", bookingHandler.CancelBooking)
 			bookings.POST("/:id/confirm", bookingHandler.ConfirmBooking)
 		}
+
+		payments := api.Group("/payments", middleware.AuthMiddleware(jwtService))
+		{
+			payments.POST("", paymentHandler.CreatePayment)
+			payments.POST("/:id/process", paymentHandler.ProcessPayment)
+			payments.GET("/:id", paymentHandler.GetPayment)
+			payments.GET("/booking/:booking_id", paymentHandler.GetPaymentByBooking)
+		}
+
+		api.POST("/payments/webhook", paymentHandler.Webhook)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

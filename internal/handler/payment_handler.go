@@ -86,6 +86,26 @@ func (h *PaymentHandler) GetPayment(c *gin.Context) {
 	c.JSON(http.StatusOK, payment)
 }
 
+func (h *PaymentHandler) GetPaymentByBooking(c *gin.Context) {
+	bookingID, err := uuid.Parse(c.Param("booking_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid booking id"})
+		return
+	}
+
+	payment, err := h.paymentService.GetPaymentByBooking(c.Request.Context(), bookingID)
+	if err != nil {
+		if err == repository.ErrPaymentNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get payment"})
+		return
+	}
+
+	c.JSON(http.StatusOK, payment)
+}
+
 func (h *PaymentHandler) Webhook(c *gin.Context) {
 	var req model.WebhookRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
