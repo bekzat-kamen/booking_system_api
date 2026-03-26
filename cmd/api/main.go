@@ -54,6 +54,9 @@ func main() {
 	seatRepo := repository.NewSeatRepository(db)
 	seatService := service.NewSeatService(seatRepo, eventRepo)
 	seatHandler := handler.NewSeatHandler(seatService)
+	bookingRepo := repository.NewBookingRepository(db)
+	bookingService := service.NewBookingService(bookingRepo, seatRepo, eventRepo)
+	bookingHandler := handler.NewBookingHandler(bookingService)
 
 	r := gin.Default()
 
@@ -64,6 +67,8 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.RefreshToken)
+			auth.POST("/validate-email", authHandler.ValidateEmail)
+			auth.GET("/validate-email", authHandler.ValidateEmail)
 
 			auth.GET("/profile", middleware.AuthMiddleware(jwtService), authHandler.GetProfile)
 		}
@@ -72,19 +77,28 @@ func main() {
 		api.DELETE("/profile", middleware.AuthMiddleware(jwtService), authHandler.DeactivateProfile)
 		api.POST("/change-password", middleware.AuthMiddleware(jwtService), authHandler.ChangePassword)
 
-		events := api.Group("/events")
+		events := api.Group("/events", middleware.AuthMiddleware(jwtService))
 		{
 			events.GET("", eventHandler.GetAll)
-			events.GET("/organizer", middleware.AuthMiddleware(jwtService), eventHandler.GetByOrganizer)
+			events.GET("/organizer", eventHandler.GetByOrganizer)
 			events.GET("/:id", eventHandler.GetByID)
-			events.POST("", middleware.AuthMiddleware(jwtService), eventHandler.Create)
-			events.POST("/:id/publish", middleware.AuthMiddleware(jwtService), eventHandler.PublishEvent)
-			events.PUT("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Update)
-			events.DELETE("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Delete)
+			events.POST("", eventHandler.Create)
+			events.POST("/:id/publish", eventHandler.PublishEvent)
+			events.PUT("/:id", eventHandler.Update)
+			events.DELETE("/:id", eventHandler.Delete)
 
-			events.POST("/:id/seats/generate", middleware.AuthMiddleware(jwtService), seatHandler.GenerateSeats)
+			events.POST("/:id/seats/generate", seatHandler.GenerateSeats)
 			events.GET("/:id/seats", seatHandler.GetSeatMap)
 			events.GET("/:id/seats/available", seatHandler.GetAvailableSeats)
+		}
+
+		bookings := api.Group("/bookings", middleware.AuthMiddleware(jwtService))
+		{
+			bookings.POST("", bookingHandler.CreateBooking)
+			bookings.GET("", bookingHandler.GetUserBookings)
+			bookings.GET("/:id", bookingHandler.GetBooking)
+			bookings.POST("/:id/cancel", bookingHandler.CancelBooking)
+			bookings.POST("/:id/confirm", bookingHandler.ConfirmBooking)
 		}
 	}
 

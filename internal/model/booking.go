@@ -1,0 +1,61 @@
+package model
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type BookingStatus string
+
+const (
+	BookingStatusPending   BookingStatus = "pending"
+	BookingStatusConfirmed BookingStatus = "confirmed"
+	BookingStatusCancelled BookingStatus = "cancelled"
+	BookingStatusExpired   BookingStatus = "expired"
+	BookingStatusCompleted BookingStatus = "completed"
+)
+
+type Booking struct {
+	ID          uuid.UUID     `db:"id" json:"id"`
+	UserID      uuid.UUID     `db:"user_id" json:"user_id"`
+	EventID     uuid.UUID     `db:"event_id" json:"event_id"`
+	TotalAmount float64       `db:"total_amount" json:"total_amount"`
+	Discount    float64       `db:"discount" json:"discount"`
+	FinalAmount float64       `db:"final_amount" json:"final_amount"`
+	Status      BookingStatus `db:"status" json:"status"`
+	ExpiresAt   time.Time     `db:"expires_at" json:"expires_at"`
+	PaidAt      *time.Time    `db:"paid_at" json:"paid_at,omitempty"`
+	CreatedAt   time.Time     `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time     `db:"updated_at" json:"updated_at"`
+}
+type BookingSeat struct {
+	BookingID uuid.UUID `db:"booking_id" json:"booking_id"`
+	SeatID    uuid.UUID `db:"seat_id" json:"seat_id"`
+	Price     float64   `db:"price" json:"price"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
+type CreateBookingRequest struct {
+	EventID uuid.UUID   `json:"event_id" binding:"required"`
+	SeatIDs []uuid.UUID `json:"seat_ids" binding:"required,min=1"`
+}
+
+type BookingResponse struct {
+	ID          uuid.UUID      `json:"id"`
+	UserID      uuid.UUID      `json:"user_id"`
+	EventID     uuid.UUID      `json:"event_id"`
+	EventTitle  string         `json:"event_title,omitempty"`
+	TotalAmount float64        `json:"total_amount"`
+	Discount    float64        `json:"discount"`
+	FinalAmount float64        `json:"final_amount"`
+	Status      BookingStatus  `json:"status"`
+	ExpiresAt   time.Time      `json:"expires_at"`
+	PaidAt      *time.Time     `json:"paid_at,omitempty"`
+	Seats       []SeatResponse `json:"seats"`
+	CreatedAt   time.Time      `json:"created_at"`
+}
+
+type CancelBookingRequest struct {
+	Reason string `json:"reason" binding:"omitempty,max=500"`
+}
