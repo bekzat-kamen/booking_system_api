@@ -51,6 +51,9 @@ func main() {
 	eventRepo := repository.NewEventRepository(db)
 	eventService := service.NewEventService(eventRepo)
 	eventHandler := handler.NewEventHandler(eventService)
+	seatRepo := repository.NewSeatRepository(db)
+	seatService := service.NewSeatService(seatRepo, eventRepo)
+	seatHandler := handler.NewSeatHandler(seatService)
 
 	r := gin.Default()
 
@@ -78,6 +81,10 @@ func main() {
 			events.POST("/:id/publish", middleware.AuthMiddleware(jwtService), eventHandler.PublishEvent)
 			events.PUT("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Update)
 			events.DELETE("/:id", middleware.AuthMiddleware(jwtService), eventHandler.Delete)
+
+			events.POST("/:id/seats/generate", middleware.AuthMiddleware(jwtService), seatHandler.GenerateSeats)
+			events.GET("/:id/seats", seatHandler.GetSeatMap)
+			events.GET("/:id/seats/available", seatHandler.GetAvailableSeats)
 		}
 	}
 
