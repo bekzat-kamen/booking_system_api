@@ -72,6 +72,17 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	return user, nil
 }
 
+func (r *UserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
+
+	var exists bool
+	if err := r.db.GetContext(ctx, &exists, query, email); err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	query := `
 		SELECT id, email, password_hash, name, role, status, email_verified, created_at, updated_at
@@ -111,6 +122,30 @@ func (r *UserRepository) Update(ctx context.Context, user *model.User) error {
 	})
 
 	return err
+}
+
+func (r *UserRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error {
+	query := `
+		UPDATE users
+		SET password_hash = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := r.db.ExecContext(ctx, query, passwordHash, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {

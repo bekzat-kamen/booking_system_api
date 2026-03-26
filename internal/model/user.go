@@ -51,3 +51,12 @@ type UpdateUserRequest struct {
 	Name  string `json:"name" binding:"omitempty,min=2,max=100"`
 	Email string `json:"email" binding:"omitempty,email"`
 }
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+}
+
+type ValidateEmailRequest struct {
+	Email string `json:"email" form:"email" binding:"required,email"`
+}

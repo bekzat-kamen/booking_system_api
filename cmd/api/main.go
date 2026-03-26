@@ -15,7 +15,7 @@ import (
 func main() {
 
 	cfg := config.Load()
-	log.Printf("📦 Loaded config: APP_ENV=%s, APP_PORT=%s", cfg.AppEnv, cfg.AppPort)
+	log.Printf("Loaded config: APP_ENV=%s, APP_PORT=%s", cfg.AppEnv, cfg.AppPort)
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -31,10 +31,10 @@ func main() {
 
 	db, err := database.NewPostgresConnection(dbConfig)
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to database: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer database.Close(db)
-	log.Println("🗄️ Database connection established")
+	log.Println("Database connection established")
 	jwtService, err := service.NewJWTService(
 		cfg.JWTSecret,
 		cfg.JWTRefreshSecret,
@@ -42,7 +42,7 @@ func main() {
 		cfg.JWTRefreshExpire,
 	)
 	if err != nil {
-		log.Fatalf("❌ Failed to create JWT service: %v", err)
+		log.Fatalf("Failed to create JWT service: %v", err)
 	}
 
 	userRepo := repository.NewUserRepository(db)
@@ -61,6 +61,10 @@ func main() {
 
 			auth.GET("/profile", middleware.AuthMiddleware(jwtService), authHandler.GetProfile)
 		}
+
+		api.PUT("/profile", middleware.AuthMiddleware(jwtService), authHandler.UpdateProfile)
+		api.DELETE("/profile", middleware.AuthMiddleware(jwtService), authHandler.DeactivateProfile)
+		api.POST("/change-password", middleware.AuthMiddleware(jwtService), authHandler.ChangePassword)
 	}
 
 	r.GET("/health", func(c *gin.Context) {
@@ -72,9 +76,9 @@ func main() {
 	})
 
 	addr := ":" + cfg.AppPort
-	log.Printf("🚀 Server starting on http://localhost%s", addr)
+	log.Printf("Server starting on http://localhost%s", addr)
 
 	if err := r.Run(addr); err != nil {
-		log.Fatalf("❌ Failed to start server: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
