@@ -60,6 +60,9 @@ func main() {
 	paymentRepo := repository.NewPaymentRepository(db)
 	paymentService := service.NewPaymentService(paymentRepo, bookingRepo, bookingService)
 	paymentHandler := handler.NewPaymentHandler(paymentService)
+	promocodeRepo := repository.NewPromocodeRepository(db)
+	promocodeService := service.NewPromocodeService(promocodeRepo)
+	promocodeHandler := handler.NewPromocodeHandler(promocodeService)
 
 	r := gin.Default()
 
@@ -113,6 +116,17 @@ func main() {
 		}
 
 		api.POST("/payments/webhook", paymentHandler.Webhook)
+
+		promocodes := api.Group("/promocodes")
+		{
+			promocodes.POST("/validate", promocodeHandler.ValidatePromocode)
+			promocodes.GET("", middleware.AuthMiddleware(jwtService), promocodeHandler.GetAllPromocodes)
+			promocodes.GET("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.GetPromocode)
+			promocodes.POST("", middleware.AuthMiddleware(jwtService), promocodeHandler.CreatePromocode)
+			promocodes.PUT("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.UpdatePromocode)
+			promocodes.DELETE("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.DeletePromocode)
+			promocodes.POST("/:id/deactivate", middleware.AuthMiddleware(jwtService), promocodeHandler.DeactivatePromocode)
+		}
 	}
 
 	r.GET("/health", func(c *gin.Context) {
