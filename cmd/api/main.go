@@ -83,6 +83,9 @@ func main() {
 	promocodeRepo := repository.NewPromocodeRepository(db)
 	promocodeService := service.NewPromocodeService(promocodeRepo)
 	promocodeHandler := handler.NewPromocodeHandler(promocodeService)
+	dashboardRepo := repository.NewDashboardRepository(db)
+	dashboardService := service.NewDashboardService(dashboardRepo)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 
 	r := gin.Default()
 
@@ -147,6 +150,11 @@ func main() {
 			promocodes.PUT("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.UpdatePromocode)
 			promocodes.DELETE("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.DeletePromocode)
 			promocodes.POST("/:id/deactivate", middleware.AuthMiddleware(jwtService), promocodeHandler.DeactivatePromocode)
+		}
+
+		dashboard := api.Group("/dashboard", middleware.AuthMiddleware(jwtService))
+		{
+			dashboard.GET("/stats", dashboardHandler.GetStats)
 		}
 	}
 
