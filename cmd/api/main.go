@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/bekzat-kamen/booking_system_api/internal/config"
@@ -35,6 +36,25 @@ func main() {
 	}
 	defer database.Close(db)
 	log.Println("Database connection established")
+
+	redisConfig := database.RedisConfig{
+		Host:     cfg.RedisHost,
+		Port:     cfg.RedisPort,
+		Password: cfg.RedisPassword,
+		DB:       cfg.RedisDB,
+	}
+
+	redisClient, err := database.NewRedisConnection(redisConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to redis: %v", err)
+	}
+	defer func() {
+		if err := database.CloseRedis(redisClient); err != nil {
+			log.Printf("Failed to close redis connection: %v", err)
+		}
+	}()
+	log.Println("Redis connection established")
+
 	jwtService, err := service.NewJWTService(
 		cfg.JWTSecret,
 		cfg.JWTRefreshSecret,
@@ -67,6 +87,7 @@ func main() {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
+	api.Use(middleware.RateLimitMiddleware(redisClient, middleware.DefaultRateLimitConfig))
 	{
 		auth := api.Group("/auth")
 		{
@@ -134,7 +155,17 @@ func main() {
 			c.JSON(500, gin.H{"status": "unhealthy", "message": "Database connection failed"})
 			return
 		}
-		c.JSON(200, gin.H{"status": "healthy", "database": "connected"})
+
+		if err := redisClient.Ping(context.Background()).Err(); err != nil {
+			c.JSON(500, gin.H{"status": "unhealthy", "message": "Redis connection failed"})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"status":   "healthy",
+			"database": "connected",
+			"redis":    "connected",
+		})
 	})
 
 	addr := ":" + cfg.AppPort

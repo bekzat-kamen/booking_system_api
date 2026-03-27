@@ -15,12 +15,14 @@ type Config struct {
 	DBUser           string
 	DBPassword       string
 	DBName           string
-	RedisHost        string
-	RedisPort        string
 	JWTSecret        string
 	JWTExpire        string
 	JWTRefreshSecret string
 	JWTRefreshExpire string
+	RedisHost        string
+	RedisPort        string
+	RedisPassword    string
+	RedisDB          int
 }
 
 func Load() *Config {
@@ -39,6 +41,8 @@ func Load() *Config {
 		DBName:           getEnv("DB_NAME", "ticket_booking"),
 		RedisHost:        getEnv("REDIS_HOST", "localhost"),
 		RedisPort:        getEnv("REDIS_PORT", "6379"),
+		RedisPassword:    getEnv("REDIS_PASSWORD", ""),
+		RedisDB:          0,
 		JWTSecret:        getEnv("JWT_SECRET", "change-me-in-production"),
 		JWTExpire:        getEnv("JWT_EXPIRE", "15m"),
 		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", "change-me-refresh-secret"),
