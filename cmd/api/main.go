@@ -86,6 +86,9 @@ func main() {
 	dashboardRepo := repository.NewDashboardRepository(db)
 	dashboardService := service.NewDashboardService(dashboardRepo)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+	adminUserRepo := repository.NewAdminUserRepository(db)
+	adminUserService := service.NewAdminUserService(adminUserRepo)
+	adminUserHandler := handler.NewAdminUserHandler(adminUserService)
 
 	r := gin.Default()
 
@@ -155,6 +158,19 @@ func main() {
 		dashboard := api.Group("/dashboard", middleware.AuthMiddleware(jwtService))
 		{
 			dashboard.GET("/stats", dashboardHandler.GetStats)
+		}
+
+		admin := api.Group("/admin", middleware.AdminMiddleware(jwtService))
+		{
+			adminUsers := admin.Group("/users")
+			{
+				adminUsers.GET("", adminUserHandler.GetAllUsers)
+				adminUsers.GET("/stats", adminUserHandler.GetUserStats)
+				adminUsers.GET("/:id", adminUserHandler.GetUserDetail)
+				adminUsers.PATCH("/:id/role", adminUserHandler.UpdateUserRole)
+				adminUsers.POST("/:id/block", adminUserHandler.BlockUser)
+				adminUsers.POST("/:id/unblock", adminUserHandler.UnblockUser)
+			}
 		}
 	}
 
