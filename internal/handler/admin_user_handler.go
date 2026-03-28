@@ -15,6 +15,10 @@ type AdminUserHandler struct {
 	adminUserService *service.AdminUserService
 }
 
+func NewAdminUserHandler(adminUserService *service.AdminUserService) *AdminUserHandler {
+	return &AdminUserHandler{adminUserService: adminUserService}
+}
+
 func (h *AdminUserHandler) GetAllUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))

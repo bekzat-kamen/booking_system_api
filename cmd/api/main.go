@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-
 	cfg := config.Load()
 	log.Printf("Loaded config: APP_ENV=%s, APP_PORT=%s", cfg.AppEnv, cfg.AppPort)
 
@@ -22,6 +21,7 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// --- DB ---
 	dbConfig := database.DBConfig{
 		Host:     cfg.DBHost,
 		Port:     cfg.DBPort,
@@ -29,7 +29,6 @@ func main() {
 		Password: cfg.DBPassword,
 		DBName:   cfg.DBName,
 	}
-
 	db, err := database.NewPostgresConnection(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -37,13 +36,13 @@ func main() {
 	defer database.Close(db)
 	log.Println("Database connection established")
 
+	// --- Redis ---
 	redisConfig := database.RedisConfig{
 		Host:     cfg.RedisHost,
 		Port:     cfg.RedisPort,
 		Password: cfg.RedisPassword,
 		DB:       cfg.RedisDB,
 	}
-
 	redisClient, err := database.NewRedisConnection(redisConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to redis: %v", err)
@@ -55,6 +54,7 @@ func main() {
 	}()
 	log.Println("Redis connection established")
 
+	// --- JWT ---
 	jwtService, err := service.NewJWTService(
 		cfg.JWTSecret,
 		cfg.JWTRefreshSecret,
@@ -65,67 +65,86 @@ func main() {
 		log.Fatalf("Failed to create JWT service: %v", err)
 	}
 
+	// --- Repositories ---
 	userRepo := repository.NewUserRepository(db)
-	authService := service.NewAuthService(userRepo, jwtService)
-	authHandler := handler.NewAuthHandler(authService)
 	eventRepo := repository.NewEventRepository(db)
-	eventService := service.NewEventService(eventRepo)
-	eventHandler := handler.NewEventHandler(eventService)
 	seatRepo := repository.NewSeatRepository(db)
-	seatService := service.NewSeatService(seatRepo, eventRepo)
-	seatHandler := handler.NewSeatHandler(seatService)
 	bookingRepo := repository.NewBookingRepository(db)
-	bookingService := service.NewBookingService(bookingRepo, seatRepo, eventRepo)
-	bookingHandler := handler.NewBookingHandler(bookingService)
 	paymentRepo := repository.NewPaymentRepository(db)
-	paymentService := service.NewPaymentService(paymentRepo, bookingRepo, bookingService)
-	paymentHandler := handler.NewPaymentHandler(paymentService)
 	promocodeRepo := repository.NewPromocodeRepository(db)
-	promocodeService := service.NewPromocodeService(promocodeRepo)
-	promocodeHandler := handler.NewPromocodeHandler(promocodeService)
 	dashboardRepo := repository.NewDashboardRepository(db)
-	dashboardService := service.NewDashboardService(dashboardRepo)
-	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	adminUserRepo := repository.NewAdminUserRepository(db)
+
+	// --- Services ---
+	authService := service.NewAuthService(userRepo, jwtService)
+	eventService := service.NewEventService(eventRepo)
+	seatService := service.NewSeatService(seatRepo, eventRepo)
+	bookingService := service.NewBookingService(bookingRepo, seatRepo, eventRepo)
+	paymentService := service.NewPaymentService(paymentRepo, bookingRepo, bookingService)
+	promocodeService := service.NewPromocodeService(promocodeRepo)
+	dashboardService := service.NewDashboardService(dashboardRepo)
 	adminUserService := service.NewAdminUserService(adminUserRepo)
+
+	// --- Handlers ---
+	authHandler := handler.NewAuthHandler(authService)
+	eventHandler := handler.NewEventHandler(eventService)
+	seatHandler := handler.NewSeatHandler(seatService)
+	bookingHandler := handler.NewBookingHandler(bookingService)
+	paymentHandler := handler.NewPaymentHandler(paymentService)
+	promocodeHandler := handler.NewPromocodeHandler(promocodeService)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	adminUserHandler := handler.NewAdminUserHandler(adminUserService)
 
+	// --- Router ---
 	r := gin.Default()
 
+	// Global Rate Limit
+	r.Use(middleware.RateLimitMiddleware(redisClient, middleware.DefaultRateLimitConfig))
+
 	api := r.Group("/api/v1")
-	api.Use(middleware.RateLimitMiddleware(redisClient, middleware.DefaultRateLimitConfig))
 	{
+		// === AUTH (Public + Protected) ===
 		auth := api.Group("/auth")
 		{
+			// Public
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.RefreshToken)
 			auth.POST("/validate-email", authHandler.ValidateEmail)
 			auth.GET("/validate-email", authHandler.ValidateEmail)
 
+			// Protected
 			auth.GET("/profile", middleware.AuthMiddleware(jwtService), authHandler.GetProfile)
+			auth.PUT("/profile", middleware.AuthMiddleware(jwtService), authHandler.UpdateProfile)
+			auth.DELETE("/profile", middleware.AuthMiddleware(jwtService), authHandler.DeactivateProfile)
+			auth.POST("/change-password", middleware.AuthMiddleware(jwtService), authHandler.ChangePassword)
 		}
 
-		api.PUT("/profile", middleware.AuthMiddleware(jwtService), authHandler.UpdateProfile)
-		api.DELETE("/profile", middleware.AuthMiddleware(jwtService), authHandler.DeactivateProfile)
-		api.POST("/change-password", middleware.AuthMiddleware(jwtService), authHandler.ChangePassword)
-
-		events := api.Group("/events", middleware.AuthMiddleware(jwtService))
+		// === EVENTS (Mixed: Public GET, Protected POST/PUT/DELETE) ===
+		events := api.Group("/events")
 		{
+			// Public (No Auth)
 			events.GET("", eventHandler.GetAll)
-			events.GET("/organizer", eventHandler.GetByOrganizer)
 			events.GET("/:id", eventHandler.GetByID)
-			events.POST("", eventHandler.Create)
-			events.POST("/:id/publish", eventHandler.PublishEvent)
-			events.PUT("/:id", eventHandler.Update)
-			events.DELETE("/:id", eventHandler.Delete)
-
-			events.POST("/:id/seats/generate", seatHandler.GenerateSeats)
 			events.GET("/:id/seats", seatHandler.GetSeatMap)
 			events.GET("/:id/seats/available", seatHandler.GetAvailableSeats)
+
+			// Protected (Auth Required)
+			eventsProtected := events.Group("")
+			eventsProtected.Use(middleware.AuthMiddleware(jwtService))
+			{
+				eventsProtected.GET("/organizer", eventHandler.GetByOrganizer)
+				eventsProtected.POST("", eventHandler.Create)
+				eventsProtected.POST("/:id/publish", eventHandler.PublishEvent)
+				eventsProtected.PUT("/:id", eventHandler.Update)
+				eventsProtected.DELETE("/:id", eventHandler.Delete)
+				eventsProtected.POST("/:id/seats/generate", seatHandler.GenerateSeats)
+			}
 		}
 
-		bookings := api.Group("/bookings", middleware.AuthMiddleware(jwtService))
+		// === BOOKINGS (Protected) ===
+		bookings := api.Group("/bookings")
+		bookings.Use(middleware.AuthMiddleware(jwtService))
 		{
 			bookings.POST("", bookingHandler.CreateBooking)
 			bookings.GET("", bookingHandler.GetUserBookings)
@@ -134,34 +153,45 @@ func main() {
 			bookings.POST("/:id/confirm", bookingHandler.ConfirmBooking)
 		}
 
-		payments := api.Group("/payments", middleware.AuthMiddleware(jwtService))
+		// === PAYMENTS (Protected) ===
+		payments := api.Group("/payments")
+		payments.Use(middleware.AuthMiddleware(jwtService))
 		{
 			payments.POST("", paymentHandler.CreatePayment)
 			payments.POST("/:id/process", paymentHandler.ProcessPayment)
 			payments.GET("/:id", paymentHandler.GetPayment)
 			payments.GET("/booking/:booking_id", paymentHandler.GetPaymentByBooking)
 		}
-
+		// Webhook is Public
 		api.POST("/payments/webhook", paymentHandler.Webhook)
 
+		// === PROMOCODES (Mixed) ===
 		promocodes := api.Group("/promocodes")
 		{
+			// Public
 			promocodes.POST("/validate", promocodeHandler.ValidatePromocode)
-			promocodes.GET("", middleware.AuthMiddleware(jwtService), promocodeHandler.GetAllPromocodes)
-			promocodes.GET("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.GetPromocode)
-			promocodes.POST("", middleware.AuthMiddleware(jwtService), promocodeHandler.CreatePromocode)
-			promocodes.PUT("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.UpdatePromocode)
-			promocodes.DELETE("/:id", middleware.AuthMiddleware(jwtService), promocodeHandler.DeletePromocode)
-			promocodes.POST("/:id/deactivate", middleware.AuthMiddleware(jwtService), promocodeHandler.DeactivatePromocode)
+
+			// Protected
+			promocodesProtected := promocodes.Group("")
+			promocodesProtected.Use(middleware.AuthMiddleware(jwtService))
+			{
+				promocodesProtected.GET("", promocodeHandler.GetAllPromocodes)
+				promocodesProtected.GET("/:id", promocodeHandler.GetPromocode)
+				promocodesProtected.POST("", promocodeHandler.CreatePromocode)
+				promocodesProtected.PUT("/:id", promocodeHandler.UpdatePromocode)
+				promocodesProtected.DELETE("/:id", promocodeHandler.DeletePromocode)
+				promocodesProtected.POST("/:id/deactivate", promocodeHandler.DeactivatePromocode)
+			}
 		}
 
-		dashboard := api.Group("/dashboard", middleware.AuthMiddleware(jwtService))
+		// === ADMIN (Admin Only) ===
+		admin := api.Group("/admin")
+		admin.Use(middleware.AdminMiddleware(jwtService))
 		{
-			dashboard.GET("/stats", dashboardHandler.GetStats)
-		}
+			// Dashboard
+			admin.GET("/dashboard", dashboardHandler.GetStats)
 
-		admin := api.Group("/admin", middleware.AdminMiddleware(jwtService))
-		{
+			// Users Management
 			adminUsers := admin.Group("/users")
 			{
 				adminUsers.GET("", adminUserHandler.GetAllUsers)
@@ -174,17 +204,16 @@ func main() {
 		}
 	}
 
+	// === Health Check (Public) ===
 	r.GET("/health", func(c *gin.Context) {
 		if err := db.Ping(); err != nil {
 			c.JSON(500, gin.H{"status": "unhealthy", "message": "Database connection failed"})
 			return
 		}
-
 		if err := redisClient.Ping(context.Background()).Err(); err != nil {
 			c.JSON(500, gin.H{"status": "unhealthy", "message": "Redis connection failed"})
 			return
 		}
-
 		c.JSON(200, gin.H{
 			"status":   "healthy",
 			"database": "connected",
@@ -192,6 +221,7 @@ func main() {
 		})
 	})
 
+	// === Start Server ===
 	addr := ":" + cfg.AppPort
 	log.Printf("Server starting on http://localhost%s", addr)
 

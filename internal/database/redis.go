@@ -10,7 +10,6 @@ import (
 
 var ctx = context.Background()
 
-// RedisConfig конфигурация для Redis
 type RedisConfig struct {
 	Host     string
 	Port     string
@@ -25,7 +24,6 @@ func NewRedisConnection(cfg RedisConfig) (*redis.Client, error) {
 		DB:       cfg.DB,
 	})
 
-	// Проверяем подключение
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)

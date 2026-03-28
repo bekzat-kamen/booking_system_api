@@ -46,7 +46,7 @@ func NewPostgresConnection(cfg DBConfig) (*sqlx.DB, error) {
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	log.Println("✅ PostgreSQL connected successfully")
+	log.Println("PostgreSQL connected successfully")
 	return db, nil
 }
 
