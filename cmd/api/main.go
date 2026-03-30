@@ -74,6 +74,7 @@ func main() {
 	promocodeRepo := repository.NewPromocodeRepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
 	adminUserRepo := repository.NewAdminUserRepository(db)
+	adminEventRepo := repository.NewAdminEventRepository(db)
 
 	// --- Services ---
 	authService := service.NewAuthService(userRepo, jwtService)
@@ -84,6 +85,7 @@ func main() {
 	promocodeService := service.NewPromocodeService(promocodeRepo)
 	dashboardService := service.NewDashboardService(dashboardRepo)
 	adminUserService := service.NewAdminUserService(adminUserRepo)
+	adminEventService := service.NewAdminEventService(adminEventRepo)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authService)
@@ -94,6 +96,7 @@ func main() {
 	promocodeHandler := handler.NewPromocodeHandler(promocodeService)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	adminUserHandler := handler.NewAdminUserHandler(adminUserService)
+	adminEventHandler := handler.NewAdminEventHandler(adminEventService)
 
 	// --- Router ---
 	r := gin.Default()
@@ -200,6 +203,17 @@ func main() {
 				adminUsers.PATCH("/:id/role", adminUserHandler.UpdateUserRole)
 				adminUsers.POST("/:id/block", adminUserHandler.BlockUser)
 				adminUsers.POST("/:id/unblock", adminUserHandler.UnblockUser)
+			}
+
+			// Events Management
+			adminEvents := admin.Group("/events")
+			{
+				adminEvents.GET("", adminEventHandler.GetAllEvents)
+				adminEvents.GET("/stats", adminEventHandler.GetEventsStats)
+				adminEvents.GET("/:id", adminEventHandler.GetEventDetail)
+				adminEvents.PUT("/:id", adminEventHandler.UpdateEvent)
+				adminEvents.DELETE("/:id", adminEventHandler.DeleteEvent)
+				adminEvents.POST("/:id/publish", adminEventHandler.PublishEvent)
 			}
 		}
 	}
