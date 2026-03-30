@@ -76,6 +76,7 @@ func main() {
 	adminUserRepo := repository.NewAdminUserRepository(db)
 	adminEventRepo := repository.NewAdminEventRepository(db)
 	adminBookingRepo := repository.NewAdminBookingRepository(db)
+	adminPromocodeRepo := repository.NewAdminPromocodeRepository(db)
 
 	// --- Services ---
 	authService := service.NewAuthService(userRepo, jwtService)
@@ -88,6 +89,7 @@ func main() {
 	adminUserService := service.NewAdminUserService(adminUserRepo)
 	adminEventService := service.NewAdminEventService(adminEventRepo)
 	adminBookingService := service.NewAdminBookingService(adminBookingRepo, seatRepo, eventRepo)
+	adminPromocodeService := service.NewAdminPromocodeService(adminPromocodeRepo)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authService)
@@ -100,6 +102,7 @@ func main() {
 	adminUserHandler := handler.NewAdminUserHandler(adminUserService)
 	adminEventHandler := handler.NewAdminEventHandler(adminEventService)
 	adminBookingHandler := handler.NewAdminBookingHandler(adminBookingService)
+	adminPromocodeHandler := handler.NewAdminPromocodeHandler(adminPromocodeService)
 
 	// --- Router ---
 	r := gin.Default()
@@ -228,6 +231,18 @@ func main() {
 				adminBookings.GET("/:id", adminBookingHandler.GetBookingDetail)
 				adminBookings.POST("/:id/cancel", adminBookingHandler.CancelBooking)
 				adminBookings.POST("/:id/refund", adminBookingHandler.RefundBooking)
+			}
+
+			// Promocodes Management
+			adminPromocodes := admin.Group("/promocodes")
+			{
+				adminPromocodes.GET("", adminPromocodeHandler.GetAllPromocodes)
+				adminPromocodes.GET("/stats", adminPromocodeHandler.GetPromocodesStats)
+				adminPromocodes.GET("/export", adminPromocodeHandler.ExportPromocodes)
+				adminPromocodes.GET("/:id", adminPromocodeHandler.GetPromocodeDetail)
+				adminPromocodes.PUT("/:id", adminPromocodeHandler.UpdatePromocode)
+				adminPromocodes.DELETE("/:id", adminPromocodeHandler.DeletePromocode)
+				adminPromocodes.POST("/bulk-deactivate", adminPromocodeHandler.BulkDeactivate)
 			}
 		}
 	}
