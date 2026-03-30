@@ -20,6 +20,11 @@ type Booking struct {
 	ID          uuid.UUID     `db:"id" json:"id"`
 	UserID      uuid.UUID     `db:"user_id" json:"user_id"`
 	EventID     uuid.UUID     `db:"event_id" json:"event_id"`
+	Email       string        `db:"user_email" json:"user_email,omitempty"`
+	Name        string        `db:"user_name" json:"user_name,omitempty"`
+	EventTitle  string        `db:"event_title" json:"event_title,omitempty"`
+	EventDate   time.Time     `db:"event_date" json:"event_date,omitempty"`
+	EventVenue  string        `db:"event_venue" json:"event_venue,omitempty"`
 	TotalAmount float64       `db:"total_amount" json:"total_amount"`
 	Discount    float64       `db:"discount" json:"discount"`
 	FinalAmount float64       `db:"final_amount" json:"final_amount"`
@@ -30,10 +35,13 @@ type Booking struct {
 	UpdatedAt   time.Time     `db:"updated_at" json:"updated_at"`
 }
 type BookingSeat struct {
-	BookingID uuid.UUID `db:"booking_id" json:"booking_id"`
-	SeatID    uuid.UUID `db:"seat_id" json:"seat_id"`
-	Price     float64   `db:"price" json:"price"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	BookingID  uuid.UUID  `db:"booking_id" json:"booking_id"`
+	SeatID     uuid.UUID  `db:"seat_id" json:"seat_id"`
+	Price      float64    `db:"price" json:"price"`
+	SeatNumber string     `db:"seat_number" json:"seat_number,omitempty"`
+	RowNumber  string     `db:"row_number" json:"row_number,omitempty"`
+	SeatStatus SeatStatus `db:"seat_status" json:"seat_status,omitempty"`
+	CreatedAt  time.Time  `db:"created_at" json:"created_at"`
 }
 
 type CreateBookingRequest struct {

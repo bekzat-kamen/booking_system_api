@@ -75,6 +75,7 @@ func main() {
 	dashboardRepo := repository.NewDashboardRepository(db)
 	adminUserRepo := repository.NewAdminUserRepository(db)
 	adminEventRepo := repository.NewAdminEventRepository(db)
+	adminBookingRepo := repository.NewAdminBookingRepository(db)
 
 	// --- Services ---
 	authService := service.NewAuthService(userRepo, jwtService)
@@ -86,6 +87,7 @@ func main() {
 	dashboardService := service.NewDashboardService(dashboardRepo)
 	adminUserService := service.NewAdminUserService(adminUserRepo)
 	adminEventService := service.NewAdminEventService(adminEventRepo)
+	adminBookingService := service.NewAdminBookingService(adminBookingRepo, seatRepo, eventRepo)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authService)
@@ -97,6 +99,7 @@ func main() {
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	adminUserHandler := handler.NewAdminUserHandler(adminUserService)
 	adminEventHandler := handler.NewAdminEventHandler(adminEventService)
+	adminBookingHandler := handler.NewAdminBookingHandler(adminBookingService)
 
 	// --- Router ---
 	r := gin.Default()
@@ -214,6 +217,17 @@ func main() {
 				adminEvents.PUT("/:id", adminEventHandler.UpdateEvent)
 				adminEvents.DELETE("/:id", adminEventHandler.DeleteEvent)
 				adminEvents.POST("/:id/publish", adminEventHandler.PublishEvent)
+			}
+
+			// Bookings Management
+			adminBookings := admin.Group("/bookings")
+			{
+				adminBookings.GET("", adminBookingHandler.GetAllBookings)
+				adminBookings.GET("/stats", adminBookingHandler.GetBookingsStats)
+				adminBookings.GET("/export", adminBookingHandler.ExportBookings)
+				adminBookings.GET("/:id", adminBookingHandler.GetBookingDetail)
+				adminBookings.POST("/:id/cancel", adminBookingHandler.CancelBooking)
+				adminBookings.POST("/:id/refund", adminBookingHandler.RefundBooking)
 			}
 		}
 	}

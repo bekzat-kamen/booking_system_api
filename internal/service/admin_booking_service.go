@@ -1,0 +1,181 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/google/uuid"
+)
+
+type AdminBookingService struct {
+	bookingRepo *repository.AdminBookingRepository
+	seatRepo    *repository.SeatRepository
+	eventRepo   *repository.EventRepository
+}
+
+func NewAdminBookingService(
+	bookingRepo *repository.AdminBookingRepository,
+	seatRepo *repository.SeatRepository,
+	eventRepo *repository.EventRepository,
+) *AdminBookingService {
+	return &AdminBookingService{
+		bookingRepo: bookingRepo,
+		seatRepo:    seatRepo,
+		eventRepo:   eventRepo,
+	}
+}
+
+func (s *AdminBookingService) GetAllBookings(ctx context.Context, page, limit int, status, userID, eventID string) ([]*model.Booking, int, error) {
+	return s.bookingRepo.GetAllBookings(ctx, page, limit, status, userID, eventID)
+}
+
+func (s *AdminBookingService) GetBookingDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+	booking, err := s.bookingRepo.GetBookingByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	seats, _ := s.bookingRepo.GetBookingSeats(ctx, id)
+	payment, _ := s.bookingRepo.GetBookingPayment(ctx, id)
+
+	detail := map[string]interface{}{
+		"booking": map[string]interface{}{
+			"id":           booking.ID,
+			"user_id":      booking.UserID,
+			"user_email":   booking.Email,
+			"user_name":    booking.Name,
+			"event_id":     booking.EventID,
+			"event_title":  booking.EventTitle,
+			"event_date":   booking.EventDate,
+			"event_venue":  booking.EventVenue,
+			"total_amount": booking.TotalAmount,
+			"discount":     booking.Discount,
+			"final_amount": booking.FinalAmount,
+			"status":       booking.Status,
+			"expires_at":   booking.ExpiresAt,
+			"paid_at":      booking.PaidAt,
+			"created_at":   booking.CreatedAt,
+		},
+		"seats":   seats,
+		"payment": payment,
+	}
+
+	return detail, nil
+}
+
+func (s *AdminBookingService) CancelBooking(ctx context.Context, id uuid.UUID, refund bool) error {
+	booking, err := s.bookingRepo.GetBookingByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if booking.Status == model.BookingStatusCancelled || booking.Status == model.BookingStatusCompleted {
+		return errors.New("cannot cancel this booking")
+	}
+
+	seats, err := s.bookingRepo.GetBookingSeats(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	for _, bs := range seats {
+		seat, err := s.seatRepo.GetByID(ctx, bs.SeatID)
+		if err != nil {
+			continue
+		}
+		if seat.Status == model.SeatStatusBooked || seat.Status == model.SeatStatusReserved {
+			seat.Status = model.SeatStatusAvailable
+			s.seatRepo.Update(ctx, seat)
+		}
+	}
+
+	event, err := s.eventRepo.GetByID(ctx, booking.EventID)
+	if err == nil {
+		event.AvailableSeats += len(seats)
+		s.eventRepo.Update(ctx, event)
+	}
+
+	if err := s.bookingRepo.CancelBookingAdmin(ctx, id, model.BookingStatusCancelled); err != nil {
+		return err
+	}
+
+	if refund {
+		payment, err := s.bookingRepo.GetBookingPayment(ctx, id)
+		if err == nil && payment != nil {
+			s.bookingRepo.RefundPayment(ctx, payment.ID)
+		}
+	}
+
+	return nil
+}
+
+func (s *AdminBookingService) RefundBooking(ctx context.Context, id uuid.UUID) error {
+	payment, err := s.bookingRepo.GetBookingPayment(ctx, id)
+	if err != nil {
+		return errors.New("payment not found")
+	}
+
+	if payment.Status == model.PaymentStatusRefunded {
+		return errors.New("payment already refunded")
+	}
+
+	return s.bookingRepo.RefundPayment(ctx, payment.ID)
+}
+
+func (s *AdminBookingService) GetBookingsStats(ctx context.Context) (map[string]interface{}, error) {
+	bookingStats, _ := s.bookingRepo.GetBookingsStats(ctx)
+	revenueStats, _ := s.bookingRepo.GetRevenueStats(ctx)
+
+	return map[string]interface{}{
+		"bookings": bookingStats,
+		"revenue":  revenueStats,
+	}, nil
+}
+
+func (s *AdminBookingService) ExportBookingsToCSV(ctx context.Context, status string) ([][]string, error) {
+	bookings, _, err := s.bookingRepo.GetAllBookings(ctx, 1, 10000, status, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var rows [][]string
+
+	rows = append(rows, []string{
+		"Booking ID", "User Email", "Event Title", "Event Date",
+		"Seats", "Total Amount", "Discount", "Final Amount",
+		"Status", "Created At",
+	})
+
+	for _, b := range bookings {
+		seats, _ := s.bookingRepo.GetBookingSeats(ctx, b.ID)
+		seatNumbers := ""
+		for i, s := range seats {
+			if i > 0 {
+				seatNumbers += ", "
+			}
+			seatNumbers += s.RowNumber + "-" + s.SeatNumber
+		}
+
+		rows = append(rows, []string{
+			b.ID.String(),
+			b.Email,
+			b.EventTitle,
+			b.EventDate.Format(time.RFC3339),
+			seatNumbers,
+			formatMoney(b.TotalAmount),
+			formatMoney(b.Discount),
+			formatMoney(b.FinalAmount),
+			string(b.Status),
+			b.CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	return rows, nil
+}
+
+func formatMoney(amount float64) string {
+	return string(rune(amount))
+}
