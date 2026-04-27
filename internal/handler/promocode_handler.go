@@ -12,10 +12,10 @@ import (
 )
 
 type PromocodeHandler struct {
-	promocodeService *service.PromocodeService
+	promocodeService service.PromocodeServiceInterface
 }
 
-func NewPromocodeHandler(promocodeService *service.PromocodeService) *PromocodeHandler {
+func NewPromocodeHandler(promocodeService service.PromocodeServiceInterface) *PromocodeHandler {
 	return &PromocodeHandler{promocodeService: promocodeService}
 }
 

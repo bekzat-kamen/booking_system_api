@@ -11,6 +11,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type AdminUserRepositoryInterface interface {
+	GetAllUsers(ctx context.Context, page, limit int, status, role string) ([]*model.User, int, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	UpdateUserRole(ctx context.Context, id uuid.UUID, role model.Role) error
+	UpdateUserStatus(ctx context.Context, id uuid.UUID, status model.Status) error
+	GetUserStats(ctx context.Context) (map[string]int64, error)
+	GetUserBookingsCount(ctx context.Context, userID uuid.UUID) (int64, error)
+	GetUserSpentAmount(ctx context.Context, userID uuid.UUID) (float64, error)
+}
+
 type AdminUserRepository struct {
 	db *sqlx.DB
 }

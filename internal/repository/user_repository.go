@@ -16,6 +16,16 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
+type UserRepositoryInterface interface {
+	Create(ctx context.Context, user *model.User) error
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	Update(ctx context.Context, user *model.User) error
+	UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
 type UserRepository struct {
 	db *sqlx.DB
 }

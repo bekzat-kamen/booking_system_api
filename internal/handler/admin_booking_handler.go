@@ -13,10 +13,10 @@ import (
 )
 
 type AdminBookingHandler struct {
-	adminBookingService *service.AdminBookingService
+	adminBookingService service.AdminBookingServiceInterface
 }
 
-func NewAdminBookingHandler(adminBookingService *service.AdminBookingService) *AdminBookingHandler {
+func NewAdminBookingHandler(adminBookingService service.AdminBookingServiceInterface) *AdminBookingHandler {
 	return &AdminBookingHandler{adminBookingService: adminBookingService}
 }
 

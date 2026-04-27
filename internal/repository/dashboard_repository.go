@@ -6,6 +6,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type DashboardRepositoryInterface interface {
+	GetStats(ctx context.Context) (*model.DashboardStats, error)
+	GetRevenueByDay(ctx context.Context) ([]model.RevenueByDay, error)
+	GetTopEvents(ctx context.Context, limit int) ([]model.TopEvent, error)
+	GetRecentActivities(ctx context.Context, limit int) ([]model.RecentActivity, error)
+}
+
 type DashboardRepository struct {
 	db *sqlx.DB
 }

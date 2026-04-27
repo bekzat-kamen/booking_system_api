@@ -15,10 +15,10 @@ var (
 )
 
 type AdminUserService struct {
-	userRepo *repository.AdminUserRepository
+	userRepo repository.AdminUserRepositoryInterface
 }
 
-func NewAdminUserService(userRepo *repository.AdminUserRepository) *AdminUserService {
+func NewAdminUserService(userRepo repository.AdminUserRepositoryInterface) *AdminUserService {
 	return &AdminUserService{userRepo: userRepo}
 }
 

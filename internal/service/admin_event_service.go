@@ -11,10 +11,10 @@ import (
 )
 
 type AdminEventService struct {
-	eventRepo *repository.AdminEventRepository
+	eventRepo repository.AdminEventRepositoryInterface
 }
 
-func NewAdminEventService(eventRepo *repository.AdminEventRepository) *AdminEventService {
+func NewAdminEventService(eventRepo repository.AdminEventRepositoryInterface) *AdminEventService {
 	return &AdminEventService{eventRepo: eventRepo}
 }
 

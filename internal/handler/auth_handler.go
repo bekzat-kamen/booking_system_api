@@ -12,7 +12,7 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
+	authService service.AuthServiceInterface
 }
 type LoginResponse struct {
 	User         *model.User `json:"user"`
@@ -20,7 +20,7 @@ type LoginResponse struct {
 	RefreshToken string      `json:"refresh_token"`
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
+func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 

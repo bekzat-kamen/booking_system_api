@@ -11,10 +11,10 @@ import (
 )
 
 type SeatHandler struct {
-	seatService *service.SeatService
+	seatService service.SeatServiceInterface
 }
 
-func NewSeatHandler(seatService *service.SeatService) *SeatHandler {
+func NewSeatHandler(seatService service.SeatServiceInterface) *SeatHandler {
 	return &SeatHandler{seatService: seatService}
 }
 

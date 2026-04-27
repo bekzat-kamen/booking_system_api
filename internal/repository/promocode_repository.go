@@ -19,6 +19,17 @@ var (
 	ErrPromocodeMinAmount = errors.New("minimum amount not met")
 )
 
+type PromocodeRepositoryInterface interface {
+	Create(ctx context.Context, promocode *model.Promocode) error
+	GetByCode(ctx context.Context, code string) (*model.Promocode, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Promocode, error)
+	GetAll(ctx context.Context, limit, offset int) ([]*model.Promocode, error)
+	Update(ctx context.Context, promocode *model.Promocode) error
+	IncrementUseCount(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	Count(ctx context.Context) (int, error)
+}
+
 type PromocodeRepository struct {
 	db *sqlx.DB
 }

@@ -15,6 +15,18 @@ var (
 	ErrBookingNotFound = errors.New("booking not found")
 )
 
+type BookingRepositoryInterface interface {
+	Create(ctx context.Context, booking *model.Booking, seats []*model.BookingSeat) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Booking, error)
+	GetByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]*model.Booking, error)
+	GetByEvent(ctx context.Context, eventID uuid.UUID, limit, offset int) ([]*model.Booking, error)
+	GetSeats(ctx context.Context, bookingID uuid.UUID) ([]*model.BookingSeat, error)
+	Update(ctx context.Context, booking *model.Booking) error
+	UpdateStatus(ctx context.Context, id uuid.UUID, status model.BookingStatus) error
+	CountByUser(ctx context.Context, userID uuid.UUID) (int, error)
+	GetExpiredPending(ctx context.Context) ([]*model.Booking, error)
+}
+
 type BookingRepository struct {
 	db *sqlx.DB
 }

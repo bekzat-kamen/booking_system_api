@@ -11,6 +11,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type AdminBookingRepositoryInterface interface {
+	GetAllBookings(ctx context.Context, page, limit int, status, userID, eventID string) ([]*model.Booking, int, error)
+	GetBookingByID(ctx context.Context, id uuid.UUID) (*model.Booking, error)
+	GetBookingSeats(ctx context.Context, bookingID uuid.UUID) ([]*model.BookingSeat, error)
+	GetBookingPayment(ctx context.Context, bookingID uuid.UUID) (*model.Payment, error)
+	CancelBookingAdmin(ctx context.Context, id uuid.UUID, status model.BookingStatus) error
+	RefundPayment(ctx context.Context, paymentID uuid.UUID) error
+	GetBookingsStats(ctx context.Context) (map[string]int64, error)
+	GetRevenueStats(ctx context.Context) (map[string]float64, error)
+}
+
 type AdminBookingRepository struct {
 	db *sqlx.DB
 }

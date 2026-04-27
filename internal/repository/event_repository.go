@@ -15,6 +15,16 @@ var (
 	ErrEventNotFound = errors.New("event not found")
 )
 
+type EventRepositoryInterface interface {
+	Create(ctx context.Context, event *model.Event) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Event, error)
+	GetAll(ctx context.Context, limit, offset int) ([]*model.Event, error)
+	Count(ctx context.Context) (int, error)
+	GetByOrganizer(ctx context.Context, organizerID uuid.UUID, limit, offset int) ([]*model.Event, error)
+	Update(ctx context.Context, event *model.Event) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
 type EventRepository struct {
 	db *sqlx.DB
 }

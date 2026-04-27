@@ -12,10 +12,10 @@ import (
 )
 
 type AdminUserHandler struct {
-	adminUserService *service.AdminUserService
+	adminUserService service.AdminUserServiceInterface
 }
 
-func NewAdminUserHandler(adminUserService *service.AdminUserService) *AdminUserHandler {
+func NewAdminUserHandler(adminUserService service.AdminUserServiceInterface) *AdminUserHandler {
 	return &AdminUserHandler{adminUserService: adminUserService}
 }
 

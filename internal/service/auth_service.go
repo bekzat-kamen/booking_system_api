@@ -18,8 +18,8 @@ var (
 )
 
 type AuthService struct {
-	userRepo   *repository.UserRepository
-	jwtService *JWTService
+	userRepo   repository.UserRepositoryInterface
+	jwtService TokenService
 }
 
 type LoginResponse struct {
@@ -28,7 +28,7 @@ type LoginResponse struct {
 	RefreshToken string      `json:"refresh_token"`
 }
 
-func NewAuthService(userRepo *repository.UserRepository, jwtService *JWTService) *AuthService {
+func NewAuthService(userRepo repository.UserRepositoryInterface, jwtService TokenService) *AuthService {
 	return &AuthService{
 		userRepo:   userRepo,
 		jwtService: jwtService,

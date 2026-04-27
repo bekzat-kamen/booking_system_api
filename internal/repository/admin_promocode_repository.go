@@ -11,6 +11,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type AdminPromocodeRepositoryInterface interface {
+	GetAllPromocodes(ctx context.Context, page, limit int, isActive string) ([]*model.Promocode, int, error)
+	GetPromocodeByID(ctx context.Context, id uuid.UUID) (*model.Promocode, error)
+	Update(ctx context.Context, promocode *model.Promocode) error
+	GetPromocodeUsageStats(ctx context.Context, promocodeID uuid.UUID) (map[string]interface{}, error)
+	GetPromocodesStats(ctx context.Context) (map[string]int64, error)
+	BulkDeactivatePromocodes(ctx context.Context, ids []uuid.UUID) error
+	DeletePromocode(ctx context.Context, id uuid.UUID) error
+}
+
 type AdminPromocodeRepository struct {
 	db *sqlx.DB
 }

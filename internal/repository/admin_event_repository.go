@@ -11,6 +11,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type AdminEventRepositoryInterface interface {
+	GetAllEvents(ctx context.Context, page, limit int, status, organizerID string) ([]*model.Event, int, error)
+	GetEventByID(ctx context.Context, id uuid.UUID) (*model.Event, error)
+	UpdateEventAdmin(ctx context.Context, event *model.Event) error
+	DeleteEventAdmin(ctx context.Context, id uuid.UUID) error
+	PublishEventAdmin(ctx context.Context, id uuid.UUID) error
+	GetEventStats(ctx context.Context, eventID uuid.UUID) (map[string]interface{}, error)
+	GetEventsByStatus(ctx context.Context) (map[string]int64, error)
+}
+
 type AdminEventRepository struct {
 	db *sqlx.DB
 }

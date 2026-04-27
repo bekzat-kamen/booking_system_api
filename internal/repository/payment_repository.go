@@ -16,6 +16,16 @@ var (
 	ErrPaymentNotFound = errors.New("payment not found")
 )
 
+type PaymentRepositoryInterface interface {
+	Create(ctx context.Context, payment *model.Payment) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Payment, error)
+	GetByBookingID(ctx context.Context, bookingID uuid.UUID) (*model.Payment, error)
+	GetByTransactionID(ctx context.Context, transactionID string) (*model.Payment, error)
+	Update(ctx context.Context, payment *model.Payment) error
+	UpdateStatus(ctx context.Context, id uuid.UUID, status model.PaymentStatus) error
+	SetProviderResponse(ctx context.Context, id uuid.UUID, response interface{}) error
+}
+
 type PaymentRepository struct {
 	db *sqlx.DB
 }

@@ -11,15 +11,15 @@ import (
 )
 
 type AdminBookingService struct {
-	bookingRepo *repository.AdminBookingRepository
-	seatRepo    *repository.SeatRepository
-	eventRepo   *repository.EventRepository
+	bookingRepo repository.AdminBookingRepositoryInterface
+	seatRepo    repository.SeatRepositoryInterface
+	eventRepo   repository.EventRepositoryInterface
 }
 
 func NewAdminBookingService(
-	bookingRepo *repository.AdminBookingRepository,
-	seatRepo *repository.SeatRepository,
-	eventRepo *repository.EventRepository,
+	bookingRepo repository.AdminBookingRepositoryInterface,
+	seatRepo repository.SeatRepositoryInterface,
+	eventRepo repository.EventRepositoryInterface,
 ) *AdminBookingService {
 	return &AdminBookingService{
 		bookingRepo: bookingRepo,

@@ -11,10 +11,10 @@ import (
 )
 
 type AdminPromocodeService struct {
-	promocodeRepo *repository.AdminPromocodeRepository
+	promocodeRepo repository.AdminPromocodeRepositoryInterface
 }
 
-func NewAdminPromocodeService(promocodeRepo *repository.AdminPromocodeRepository) *AdminPromocodeService {
+func NewAdminPromocodeService(promocodeRepo repository.AdminPromocodeRepositoryInterface) *AdminPromocodeService {
 	return &AdminPromocodeService{promocodeRepo: promocodeRepo}
 }
 

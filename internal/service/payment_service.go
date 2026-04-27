@@ -17,15 +17,15 @@ var (
 )
 
 type PaymentService struct {
-	paymentRepo    *repository.PaymentRepository
-	bookingRepo    *repository.BookingRepository
-	bookingService *BookingService
+	paymentRepo    repository.PaymentRepositoryInterface
+	bookingRepo    repository.BookingRepositoryInterface
+	bookingService BookingServiceInterface
 }
 
 func NewPaymentService(
-	paymentRepo *repository.PaymentRepository,
-	bookingRepo *repository.BookingRepository,
-	bookingService *BookingService,
+	paymentRepo repository.PaymentRepositoryInterface,
+	bookingRepo repository.BookingRepositoryInterface,
+	bookingService BookingServiceInterface,
 ) *PaymentService {
 	return &PaymentService{
 		paymentRepo:    paymentRepo,

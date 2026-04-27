@@ -12,10 +12,10 @@ import (
 )
 
 type AdminEventHandler struct {
-	adminEventService *service.AdminEventService
+	adminEventService service.AdminEventServiceInterface
 }
 
-func NewAdminEventHandler(adminEventService *service.AdminEventService) *AdminEventHandler {
+func NewAdminEventHandler(adminEventService service.AdminEventServiceInterface) *AdminEventHandler {
 	return &AdminEventHandler{adminEventService: adminEventService}
 }
 

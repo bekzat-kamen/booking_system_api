@@ -12,10 +12,10 @@ import (
 )
 
 type BookingHandler struct {
-	bookingService *service.BookingService
+	bookingService service.BookingServiceInterface
 }
 
-func NewBookingHandler(bookingService *service.BookingService) *BookingHandler {
+func NewBookingHandler(bookingService service.BookingServiceInterface) *BookingHandler {
 	return &BookingHandler{bookingService: bookingService}
 }
 

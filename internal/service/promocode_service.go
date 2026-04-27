@@ -15,10 +15,10 @@ var (
 )
 
 type PromocodeService struct {
-	promocodeRepo *repository.PromocodeRepository
+	promocodeRepo repository.PromocodeRepositoryInterface
 }
 
-func NewPromocodeService(promocodeRepo *repository.PromocodeRepository) *PromocodeService {
+func NewPromocodeService(promocodeRepo repository.PromocodeRepositoryInterface) *PromocodeService {
 	return &PromocodeService{promocodeRepo: promocodeRepo}
 }
 

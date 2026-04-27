@@ -9,10 +9,10 @@ import (
 )
 
 type DashboardService struct {
-	dashboardRepo *repository.DashboardRepository
+	dashboardRepo repository.DashboardRepositoryInterface
 }
 
-func NewDashboardService(dashboardRepo *repository.DashboardRepository) *DashboardService {
+func NewDashboardService(dashboardRepo repository.DashboardRepositoryInterface) *DashboardService {
 	return &DashboardService{dashboardRepo: dashboardRepo}
 }
 

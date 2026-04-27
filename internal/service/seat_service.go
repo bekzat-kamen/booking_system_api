@@ -16,11 +16,11 @@ var (
 )
 
 type SeatService struct {
-	seatRepo  *repository.SeatRepository
-	eventRepo *repository.EventRepository
+	seatRepo  repository.SeatRepositoryInterface
+	eventRepo repository.EventRepositoryInterface
 }
 
-func NewSeatService(seatRepo *repository.SeatRepository, eventRepo *repository.EventRepository) *SeatService {
+func NewSeatService(seatRepo repository.SeatRepositoryInterface, eventRepo repository.EventRepositoryInterface) *SeatService {
 	return &SeatService{
 		seatRepo:  seatRepo,
 		eventRepo: eventRepo,

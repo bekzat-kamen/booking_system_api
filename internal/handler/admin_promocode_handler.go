@@ -13,10 +13,10 @@ import (
 )
 
 type AdminPromocodeHandler struct {
-	adminPromocodeService *service.AdminPromocodeService
+	adminPromocodeService service.AdminPromocodeServiceInterface
 }
 
-func NewAdminPromocodeHandler(adminPromocodeService *service.AdminPromocodeService) *AdminPromocodeHandler {
+func NewAdminPromocodeHandler(adminPromocodeService service.AdminPromocodeServiceInterface) *AdminPromocodeHandler {
 	return &AdminPromocodeHandler{adminPromocodeService: adminPromocodeService}
 }
 

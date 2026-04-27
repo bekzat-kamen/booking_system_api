@@ -16,6 +16,19 @@ var (
 	ErrSeatNotAvailable = errors.New("seat is not available")
 )
 
+type SeatRepositoryInterface interface {
+	Create(ctx context.Context, seat *model.Seat) error
+	CreateBatch(ctx context.Context, seats []*model.Seat) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Seat, error)
+	GetByEvent(ctx context.Context, eventID uuid.UUID) ([]*model.Seat, error)
+	GetByEventAndStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) ([]*model.Seat, error)
+	Update(ctx context.Context, seat *model.Seat) error
+	UpdateStatus(ctx context.Context, id uuid.UUID, status model.SeatStatus, version int) error
+	CountByEvent(ctx context.Context, eventID uuid.UUID) (int, error)
+	CountByStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) (int, error)
+	Exists(ctx context.Context, eventID uuid.UUID, rowNumber, seatNumber string) (bool, error)
+}
+
 type SeatRepository struct {
 	db *sqlx.DB
 }

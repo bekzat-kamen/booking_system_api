@@ -17,15 +17,15 @@ var (
 )
 
 type BookingService struct {
-	bookingRepo *repository.BookingRepository
-	seatRepo    *repository.SeatRepository
-	eventRepo   *repository.EventRepository
+	bookingRepo repository.BookingRepositoryInterface
+	seatRepo    repository.SeatRepositoryInterface
+	eventRepo   repository.EventRepositoryInterface
 }
 
 func NewBookingService(
-	bookingRepo *repository.BookingRepository,
-	seatRepo *repository.SeatRepository,
-	eventRepo *repository.EventRepository,
+	bookingRepo repository.BookingRepositoryInterface,
+	seatRepo repository.SeatRepositoryInterface,
+	eventRepo repository.EventRepositoryInterface,
 ) *BookingService {
 	return &BookingService{
 		bookingRepo: bookingRepo,
