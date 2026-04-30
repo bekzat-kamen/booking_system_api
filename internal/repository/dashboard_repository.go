@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/bekzat-kamen/booking_system_api/internal/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -24,33 +25,75 @@ func NewDashboardRepository(db *sqlx.DB) *DashboardRepository {
 func (r *DashboardRepository) GetStats(ctx context.Context) (*model.DashboardStats, error) {
 	stats := &model.DashboardStats{}
 
-	r.db.GetContext(ctx, &stats.TotalUsers, `SELECT COUNT(*) FROM users`)
-	r.db.GetContext(ctx, &stats.NewUsersToday, `SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '1 day'`)
-	r.db.GetContext(ctx, &stats.ActiveUsers, `SELECT COUNT(*) FROM users WHERE status = 'active'`)
+	if err := r.db.GetContext(ctx, &stats.TotalUsers, `SELECT COUNT(*) FROM users`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.NewUsersToday, `SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '1 day'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.ActiveUsers, `SELECT COUNT(*) FROM users WHERE status = 'active'`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.TotalEvents, `SELECT COUNT(*) FROM events`)
-	r.db.GetContext(ctx, &stats.PublishedEvents, `SELECT COUNT(*) FROM events WHERE status = 'published'`)
-	r.db.GetContext(ctx, &stats.DraftEvents, `SELECT COUNT(*) FROM events WHERE status = 'draft'`)
-	r.db.GetContext(ctx, &stats.CancelledEvents, `SELECT COUNT(*) FROM events WHERE status = 'cancelled'`)
+	if err := r.db.GetContext(ctx, &stats.TotalEvents, `SELECT COUNT(*) FROM events`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.PublishedEvents, `SELECT COUNT(*) FROM events WHERE status = 'published'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.DraftEvents, `SELECT COUNT(*) FROM events WHERE status = 'draft'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.CancelledEvents, `SELECT COUNT(*) FROM events WHERE status = 'cancelled'`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.TotalBookings, `SELECT COUNT(*) FROM bookings`)
-	r.db.GetContext(ctx, &stats.PendingBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'pending'`)
-	r.db.GetContext(ctx, &stats.ConfirmedBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'confirmed'`)
-	r.db.GetContext(ctx, &stats.CancelledBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'cancelled'`)
+	if err := r.db.GetContext(ctx, &stats.TotalBookings, `SELECT COUNT(*) FROM bookings`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.PendingBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'pending'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.ConfirmedBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'confirmed'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.CancelledBookings, `SELECT COUNT(*) FROM bookings WHERE status = 'cancelled'`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.TotalRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed'`)
-	r.db.GetContext(ctx, &stats.TodayRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed' AND paid_at >= NOW() - INTERVAL '1 day'`)
-	r.db.GetContext(ctx, &stats.MonthRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed' AND paid_at >= NOW() - INTERVAL '30 day'`)
+	if err := r.db.GetContext(ctx, &stats.TotalRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.TodayRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed' AND paid_at >= NOW() - INTERVAL '1 day'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.MonthRevenue, `SELECT COALESCE(SUM(final_amount), 0) FROM bookings WHERE status = 'confirmed' AND paid_at >= NOW() - INTERVAL '30 day'`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.AverageCheck, `SELECT COALESCE(AVG(final_amount), 0) FROM bookings WHERE status = 'confirmed'`)
+	if err := r.db.GetContext(ctx, &stats.AverageCheck, `SELECT COALESCE(AVG(final_amount), 0) FROM bookings WHERE status = 'confirmed'`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.TotalPromocodes, `SELECT COUNT(*) FROM promocodes`)
-	r.db.GetContext(ctx, &stats.ActivePromocodes, `SELECT COUNT(*) FROM promocodes WHERE is_active = true`)
+	if err := r.db.GetContext(ctx, &stats.TotalPromocodes, `SELECT COUNT(*) FROM promocodes`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.ActivePromocodes, `SELECT COUNT(*) FROM promocodes WHERE is_active = true`); err != nil {
+		return nil, err
+	}
 
-	r.db.GetContext(ctx, &stats.TotalPayments, `SELECT COUNT(*) FROM payment_transactions`)
-	r.db.GetContext(ctx, &stats.SuccessPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'success'`)
-	r.db.GetContext(ctx, &stats.FailedPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'failed'`)
-	r.db.GetContext(ctx, &stats.RefundedPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'refunded'`)
+	if err := r.db.GetContext(ctx, &stats.TotalPayments, `SELECT COUNT(*) FROM payment_transactions`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.SuccessPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'success'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.FailedPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'failed'`); err != nil {
+		return nil, err
+	}
+	if err := r.db.GetContext(ctx, &stats.RefundedPayments, `SELECT COUNT(*) FROM payment_transactions WHERE status = 'refunded'`); err != nil {
+		return nil, err
+	}
 
 	return stats, nil
 }

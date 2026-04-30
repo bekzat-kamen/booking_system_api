@@ -95,8 +95,9 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, re
 	for _, seat := range seats {
 		seat.Status = model.SeatStatusReserved
 		if err := s.seatRepo.Update(ctx, seat); err != nil {
-
-			s.bookingRepo.UpdateStatus(ctx, booking.ID, model.BookingStatusCancelled)
+			if rollbackErr := s.bookingRepo.UpdateStatus(ctx, booking.ID, model.BookingStatusCancelled); rollbackErr != nil {
+				return nil, errors.New("failed to reserve seats and rollback booking")
+			}
 			return nil, errors.New("failed to reserve seats")
 		}
 	}
@@ -176,7 +177,9 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID,
 			continue
 		}
 		seat.Status = model.SeatStatusAvailable
-		s.seatRepo.Update(ctx, seat)
+		if err := s.seatRepo.Update(ctx, seat); err != nil {
+			return err
+		}
 	}
 
 	booking.Status = model.BookingStatusCancelled
@@ -187,7 +190,9 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID,
 	event, err := s.eventRepo.GetByID(ctx, booking.EventID)
 	if err == nil {
 		event.AvailableSeats += len(seats)
-		s.eventRepo.Update(ctx, event)
+		if err := s.eventRepo.Update(ctx, event); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -284,17 +289,23 @@ func (s *BookingService) ExpirePendingBookings(ctx context.Context) (int, error)
 			}
 			if seat.Status == model.SeatStatusReserved {
 				seat.Status = model.SeatStatusAvailable
-				s.seatRepo.Update(ctx, seat)
+				if err := s.seatRepo.Update(ctx, seat); err != nil {
+					return count, err
+				}
 			}
 		}
 
 		booking.Status = model.BookingStatusExpired
-		s.bookingRepo.Update(ctx, booking)
+		if err := s.bookingRepo.Update(ctx, booking); err != nil {
+			return count, err
+		}
 
 		event, err := s.eventRepo.GetByID(ctx, booking.EventID)
 		if err == nil {
 			event.AvailableSeats += len(seats)
-			s.eventRepo.Update(ctx, event)
+			if err := s.eventRepo.Update(ctx, event); err != nil {
+				return count, err
+			}
 		}
 
 		count++

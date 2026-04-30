@@ -93,7 +93,9 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, paymentID uuid.UUID
 
 	if err := s.bookingService.ConfirmBooking(ctx, payment.BookingID); err != nil {
 		payment.Status = model.PaymentStatusFailed
-		s.paymentRepo.Update(ctx, payment)
+		if updateErr := s.paymentRepo.Update(ctx, payment); updateErr != nil {
+			return nil, errors.New("failed to confirm booking and mark payment as failed")
+		}
 		return nil, errors.New("failed to confirm booking")
 	}
 

@@ -33,7 +33,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close(db)
+	defer func() {
+		if err := database.Close(db); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
 	log.Println("Database connection established")
 
 	// --- Redis ---

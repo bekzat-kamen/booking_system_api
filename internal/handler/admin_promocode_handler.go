@@ -164,6 +164,14 @@ func (h *AdminPromocodeHandler) ExportPromocodes(c *gin.Context) {
 	defer w.Flush()
 
 	for _, row := range rows {
-		w.Write(row)
+		if err := w.Write(row); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write csv"})
+			return
+		}
+	}
+
+	if err := w.Error(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to finalize csv"})
+		return
 	}
 }

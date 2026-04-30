@@ -88,14 +88,18 @@ func (s *AdminBookingService) CancelBooking(ctx context.Context, id uuid.UUID, r
 		}
 		if seat.Status == model.SeatStatusBooked || seat.Status == model.SeatStatusReserved {
 			seat.Status = model.SeatStatusAvailable
-			s.seatRepo.Update(ctx, seat)
+			if err := s.seatRepo.Update(ctx, seat); err != nil {
+				return err
+			}
 		}
 	}
 
 	event, err := s.eventRepo.GetByID(ctx, booking.EventID)
 	if err == nil {
 		event.AvailableSeats += len(seats)
-		s.eventRepo.Update(ctx, event)
+		if err := s.eventRepo.Update(ctx, event); err != nil {
+			return err
+		}
 	}
 
 	if err := s.bookingRepo.CancelBookingAdmin(ctx, id, model.BookingStatusCancelled); err != nil {
@@ -105,7 +109,9 @@ func (s *AdminBookingService) CancelBooking(ctx context.Context, id uuid.UUID, r
 	if refund {
 		payment, err := s.bookingRepo.GetBookingPayment(ctx, id)
 		if err == nil && payment != nil {
-			s.bookingRepo.RefundPayment(ctx, payment.ID)
+			if err := s.bookingRepo.RefundPayment(ctx, payment.ID); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -63,7 +63,9 @@ func (r *SeatRepository) CreateBatch(ctx context.Context, seats []*model.Seat) e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	query := `
 		INSERT INTO seats (id, event_id, seat_number, row_number, status, price, version, created_at, updated_at)

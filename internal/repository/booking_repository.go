@@ -40,7 +40,9 @@ func (r *BookingRepository) Create(ctx context.Context, booking *model.Booking, 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	query := `
 		INSERT INTO bookings (id, user_id, event_id, total_amount, discount, final_amount, status, expires_at, created_at, updated_at)
