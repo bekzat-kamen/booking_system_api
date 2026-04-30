@@ -1,4 +1,5 @@
 ![Go CI](https://github.com/bekzat-kamen/booking_system_api/actions/workflows/go.yml/badge.svg)
+[![codecov](https://codecov.io/github/bekzat-kamen/booking_system_api/branch/main/graph/badge.svg)](https://codecov.io/github/bekzat-kamen/booking_system_api)
 
 # 🎫 Booking System API
 
