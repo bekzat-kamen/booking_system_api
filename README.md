@@ -1,3 +1,5 @@
+![Go CI](https://github.com/bekzat-kamen/booking_system_api/actions/workflows/go.yml/badge.svg)
+
 # 🎫 Booking System API
 
 Система управления мероприятиями и бронирования билетов на Go.
