@@ -1,0 +1,140 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\handler\admin_event_handler.go:1:1
+package handler
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/bekzat-kamen/booking_system_api/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type AdminEventHandler struct {
+	adminEventService service.AdminEventServiceInterface
+}
+
+func NewAdminEventHandler(adminEventService service.AdminEventServiceInterface) *AdminEventHandler {goCover_fb525f7f7f88__7[0] = 1 ; goCover_fb525f7f7f88__7[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__7[2] = 7 ; goCover_fb525f7f7f88__7[3] = 1;
+	return &AdminEventHandler{adminEventService: adminEventService}
+}
+
+func (h *AdminEventHandler) GetAllEvents(c *gin.Context) {goCover_fb525f7f7f88__8[0] = 3 ; goCover_fb525f7f7f88__8[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__8[2] = 8 ; goCover_fb525f7f7f88__8[3] = 1;
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	status := c.Query("status")
+	organizerID := c.Query("organizer_id")
+
+	events, total, err := h.adminEventService.GetAllEvents(c.Request.Context(), page, limit, status, organizerID)
+	if err != nil {goCover_fb525f7f7f88__8[5] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get events"})
+		return
+	}
+
+	goCover_fb525f7f7f88__8[4] = 1;c.JSON(http.StatusOK, gin.H{
+		"events": events,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
+}
+
+func (h *AdminEventHandler) GetEventDetail(c *gin.Context) {goCover_fb525f7f7f88__9[0] = 7 ; goCover_fb525f7f7f88__9[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__9[2] = 9 ; goCover_fb525f7f7f88__9[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__9[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__9[4] = 1;detail, err := h.adminEventService.GetEventDetail(c.Request.Context(), id)
+	if err != nil {goCover_fb525f7f7f88__9[7] = 1;
+		if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__9[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__9[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get event"})
+		return
+	}
+
+	goCover_fb525f7f7f88__9[5] = 1;c.JSON(http.StatusOK, detail)
+}
+
+func (h *AdminEventHandler) UpdateEvent(c *gin.Context) {goCover_fb525f7f7f88__10[0] = 9 ; goCover_fb525f7f7f88__10[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__10[2] = 10 ; goCover_fb525f7f7f88__10[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__10[7] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__10[4] = 1;var req model.UpdateEventRequest
+	if err := c.ShouldBindJSON(&req); err != nil {goCover_fb525f7f7f88__10[8] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	goCover_fb525f7f7f88__10[5] = 1;event, err := h.adminEventService.UpdateEvent(c.Request.Context(), id, &req)
+	if err != nil {goCover_fb525f7f7f88__10[9] = 1;
+		if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__10[11] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__10[10] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update event"})
+		return
+	}
+
+	goCover_fb525f7f7f88__10[6] = 1;c.JSON(http.StatusOK, event)
+}
+
+func (h *AdminEventHandler) DeleteEvent(c *gin.Context) {goCover_fb525f7f7f88__11[0] = 7 ; goCover_fb525f7f7f88__11[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__11[2] = 11 ; goCover_fb525f7f7f88__11[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__11[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__11[4] = 1;err = h.adminEventService.DeleteEvent(c.Request.Context(), id)
+	if err != nil {goCover_fb525f7f7f88__11[7] = 1;
+		if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__11[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__11[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to cancel event"})
+		return
+	}
+
+	goCover_fb525f7f7f88__11[5] = 1;c.JSON(http.StatusOK, gin.H{"message": "event cancelled successfully"})
+}
+
+func (h *AdminEventHandler) PublishEvent(c *gin.Context) {goCover_fb525f7f7f88__12[0] = 7 ; goCover_fb525f7f7f88__12[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__12[2] = 12 ; goCover_fb525f7f7f88__12[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__12[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__12[4] = 1;event, err := h.adminEventService.PublishEvent(c.Request.Context(), id)
+	if err != nil {goCover_fb525f7f7f88__12[7] = 1;
+		if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__12[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__12[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish event"})
+		return
+	}
+
+	goCover_fb525f7f7f88__12[5] = 1;c.JSON(http.StatusOK, event)
+}
+
+func (h *AdminEventHandler) GetEventsStats(c *gin.Context) {goCover_fb525f7f7f88__13[0] = 3 ; goCover_fb525f7f7f88__13[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__13[2] = 13 ; goCover_fb525f7f7f88__13[3] = 1;
+	stats, err := h.adminEventService.GetEventsStats(c.Request.Context())
+	if err != nil {goCover_fb525f7f7f88__13[5] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get stats"})
+		return
+	}
+
+	goCover_fb525f7f7f88__13[4] = 1;c.JSON(http.StatusOK, stats)
+}

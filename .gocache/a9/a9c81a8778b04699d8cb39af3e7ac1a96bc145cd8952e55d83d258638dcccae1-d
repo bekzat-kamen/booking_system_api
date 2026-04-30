@@ -1,0 +1,202 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\repository\seat_repository.go:1:1
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrSeatNotFound     = errors.New("seat not found")
+	ErrSeatNotAvailable = errors.New("seat is not available")
+)
+
+type SeatRepositoryInterface interface {
+	Create(ctx context.Context, seat *model.Seat) error
+	CreateBatch(ctx context.Context, seats []*model.Seat) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Seat, error)
+	GetByEvent(ctx context.Context, eventID uuid.UUID) ([]*model.Seat, error)
+	GetByEventAndStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) ([]*model.Seat, error)
+	Update(ctx context.Context, seat *model.Seat) error
+	UpdateStatus(ctx context.Context, id uuid.UUID, status model.SeatStatus, version int) error
+	CountByEvent(ctx context.Context, eventID uuid.UUID) (int, error)
+	CountByStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) (int, error)
+	Exists(ctx context.Context, eventID uuid.UUID, rowNumber, seatNumber string) (bool, error)
+}
+
+type SeatRepository struct {
+	db *sqlx.DB
+}
+
+func NewSeatRepository(db *sqlx.DB) *SeatRepository {goCover_5d9affc06acf__73[0] = 1 ; goCover_5d9affc06acf__73[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__73[2] = 73 ; goCover_5d9affc06acf__73[3] = 1;
+	return &SeatRepository{db: db}
+}
+
+func (r *SeatRepository) Create(ctx context.Context, seat *model.Seat) error {goCover_5d9affc06acf__74[0] = 1 ; goCover_5d9affc06acf__74[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__74[2] = 74 ; goCover_5d9affc06acf__74[3] = 1;
+	query := `
+		INSERT INTO seats (id, event_id, seat_number, row_number, status, price, version, created_at, updated_at)
+		VALUES (:id, :event_id, :seat_number, :row_number, :status, :price, :version, :created_at, :updated_at)
+	`
+
+	_, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":          seat.ID,
+		"event_id":    seat.EventID,
+		"seat_number": seat.SeatNumber,
+		"row_number":  seat.RowNumber,
+		"status":      seat.Status,
+		"price":       seat.Price,
+		"version":     seat.Version,
+		"created_at":  time.Now(),
+		"updated_at":  time.Now(),
+	})
+
+	return err
+}
+
+func (r *SeatRepository) CreateBatch(ctx context.Context, seats []*model.Seat) error {goCover_5d9affc06acf__75[0] = 8 ; goCover_5d9affc06acf__75[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__75[2] = 75 ; goCover_5d9affc06acf__75[3] = 1;
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {goCover_5d9affc06acf__75[7] = 1;
+		return err
+	}
+	goCover_5d9affc06acf__75[4] = 1;defer func() {goCover_5d9affc06acf__75[8] = 1;
+		_ = tx.Rollback()
+	}()
+
+	goCover_5d9affc06acf__75[5] = 1;query := `
+		INSERT INTO seats (id, event_id, seat_number, row_number, status, price, version, created_at, updated_at)
+		VALUES (:id, :event_id, :seat_number, :row_number, :status, :price, :version, :created_at, :updated_at)
+	`
+
+	for _, seat := range seats {goCover_5d9affc06acf__75[9] = 1;
+		_, err := tx.NamedExecContext(ctx, query, map[string]interface{}{
+			"id":          seat.ID,
+			"event_id":    seat.EventID,
+			"seat_number": seat.SeatNumber,
+			"row_number":  seat.RowNumber,
+			"status":      seat.Status,
+			"price":       seat.Price,
+			"version":     seat.Version,
+			"created_at":  time.Now(),
+			"updated_at":  time.Now(),
+		})
+		if err != nil {goCover_5d9affc06acf__75[10] = 1;
+			return err
+		}
+	}
+
+	goCover_5d9affc06acf__75[6] = 1;return tx.Commit()
+}
+
+func (r *SeatRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Seat, error) {goCover_5d9affc06acf__76[0] = 5 ; goCover_5d9affc06acf__76[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__76[2] = 76 ; goCover_5d9affc06acf__76[3] = 1;
+	query := `
+		SELECT id, event_id, seat_number, row_number, status, price, version, created_at, updated_at
+		FROM seats
+		WHERE id = $1
+	`
+
+	seat := &model.Seat{}
+	err := r.db.GetContext(ctx, seat, query, id)
+
+	if err != nil {goCover_5d9affc06acf__76[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__76[7] = 1;
+			return nil, ErrSeatNotFound
+		}
+		goCover_5d9affc06acf__76[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__76[4] = 1;return seat, nil
+}
+
+func (r *SeatRepository) GetByEvent(ctx context.Context, eventID uuid.UUID) ([]*model.Seat, error) {goCover_5d9affc06acf__77[0] = 1 ; goCover_5d9affc06acf__77[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__77[2] = 77 ; goCover_5d9affc06acf__77[3] = 1;
+	query := `
+		SELECT id, event_id, seat_number, row_number, status, price, version, created_at, updated_at
+		FROM seats
+		WHERE event_id = $1
+		ORDER BY row_number, seat_number
+	`
+
+	var seats []*model.Seat
+	err := r.db.SelectContext(ctx, &seats, query, eventID)
+
+	return seats, err
+}
+
+func (r *SeatRepository) GetByEventAndStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) ([]*model.Seat, error) {goCover_5d9affc06acf__78[0] = 1 ; goCover_5d9affc06acf__78[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__78[2] = 78 ; goCover_5d9affc06acf__78[3] = 1;
+	query := `
+		SELECT id, event_id, seat_number, row_number, status, price, version, created_at, updated_at
+		FROM seats
+		WHERE event_id = $1 AND status = $2
+		ORDER BY row_number, seat_number
+	`
+
+	var seats []*model.Seat
+	err := r.db.SelectContext(ctx, &seats, query, eventID, status)
+
+	return seats, err
+}
+
+func (r *SeatRepository) Update(ctx context.Context, seat *model.Seat) error {goCover_5d9affc06acf__79[0] = 7 ; goCover_5d9affc06acf__79[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__79[2] = 79 ; goCover_5d9affc06acf__79[3] = 1;
+	query := `
+		UPDATE seats
+		SET status = :status, price = :price, version = :version + 1, updated_at = :updated_at
+		WHERE id = :id AND version = :version
+	`
+
+	result, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":         seat.ID,
+		"status":     seat.Status,
+		"price":      seat.Price,
+		"version":    seat.Version,
+		"updated_at": time.Now(),
+	})
+	if err != nil {goCover_5d9affc06acf__79[7] = 1;
+		return err
+	}
+
+	goCover_5d9affc06acf__79[4] = 1;rowsAffected, err := result.RowsAffected()
+	if err != nil {goCover_5d9affc06acf__79[8] = 1;
+		return err
+	}
+
+	goCover_5d9affc06acf__79[5] = 1;if rowsAffected == 0 {goCover_5d9affc06acf__79[9] = 1;
+		return errors.New("seat not found or version mismatch (optimistic lock)")
+	}
+
+	goCover_5d9affc06acf__79[6] = 1;return nil
+}
+
+func (r *SeatRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status model.SeatStatus, version int) error {goCover_5d9affc06acf__80[0] = 1 ; goCover_5d9affc06acf__80[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__80[2] = 80 ; goCover_5d9affc06acf__80[3] = 1;
+	seat := &model.Seat{
+		ID:      id,
+		Status:  status,
+		Version: version,
+	}
+	return r.Update(ctx, seat)
+}
+
+func (r *SeatRepository) CountByEvent(ctx context.Context, eventID uuid.UUID) (int, error) {goCover_5d9affc06acf__81[0] = 1 ; goCover_5d9affc06acf__81[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__81[2] = 81 ; goCover_5d9affc06acf__81[3] = 1;
+	query := `SELECT COUNT(*) FROM seats WHERE event_id = $1`
+	var count int
+	err := r.db.GetContext(ctx, &count, query, eventID)
+	return count, err
+}
+
+func (r *SeatRepository) CountByStatus(ctx context.Context, eventID uuid.UUID, status model.SeatStatus) (int, error) {goCover_5d9affc06acf__82[0] = 1 ; goCover_5d9affc06acf__82[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__82[2] = 82 ; goCover_5d9affc06acf__82[3] = 1;
+	query := `SELECT COUNT(*) FROM seats WHERE event_id = $1 AND status = $2`
+	var count int
+	err := r.db.GetContext(ctx, &count, query, eventID, status)
+	return count, err
+}
+
+func (r *SeatRepository) Exists(ctx context.Context, eventID uuid.UUID, rowNumber, seatNumber string) (bool, error) {goCover_5d9affc06acf__83[0] = 1 ; goCover_5d9affc06acf__83[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__83[2] = 83 ; goCover_5d9affc06acf__83[3] = 1;
+	query := `SELECT EXISTS(SELECT 1 FROM seats WHERE event_id = $1 AND row_number = $2 AND seat_number = $3)`
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, eventID, rowNumber, seatNumber).Scan(&exists)
+	return exists, err
+}

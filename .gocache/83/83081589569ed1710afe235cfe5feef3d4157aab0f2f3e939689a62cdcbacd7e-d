@@ -1,0 +1,161 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\repository\promocode_repository.go:1:1
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrPromocodeNotFound  = errors.New("promocode not found")
+	ErrPromocodeExpired   = errors.New("promocode has expired")
+	ErrPromocodeNotActive = errors.New("promocode is not active")
+	ErrPromocodeMaxUses   = errors.New("promocode usage limit reached")
+	ErrPromocodeMinAmount = errors.New("minimum amount not met")
+)
+
+type PromocodeRepositoryInterface interface {
+	Create(ctx context.Context, promocode *model.Promocode) error
+	GetByCode(ctx context.Context, code string) (*model.Promocode, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Promocode, error)
+	GetAll(ctx context.Context, limit, offset int) ([]*model.Promocode, error)
+	Update(ctx context.Context, promocode *model.Promocode) error
+	IncrementUseCount(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	Count(ctx context.Context) (int, error)
+}
+
+type PromocodeRepository struct {
+	db *sqlx.DB
+}
+
+func NewPromocodeRepository(db *sqlx.DB) *PromocodeRepository {goCover_5d9affc06acf__64[0] = 1 ; goCover_5d9affc06acf__64[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__64[2] = 64 ; goCover_5d9affc06acf__64[3] = 1;
+	return &PromocodeRepository{db: db}
+}
+
+func (r *PromocodeRepository) Create(ctx context.Context, promocode *model.Promocode) error {goCover_5d9affc06acf__65[0] = 1 ; goCover_5d9affc06acf__65[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__65[2] = 65 ; goCover_5d9affc06acf__65[3] = 1;
+	query := `
+		INSERT INTO promocodes (id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at)
+		VALUES (:id, :code, :description, :discount_type, :discount_value, :min_amount, :max_uses, :used_count, :valid_from, :valid_until, :is_active, :created_by, :created_at, :updated_at)
+	`
+
+	_, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":             promocode.ID,
+		"code":           promocode.Code,
+		"description":    promocode.Description,
+		"discount_type":  promocode.DiscountType,
+		"discount_value": promocode.DiscountValue,
+		"min_amount":     promocode.MinAmount,
+		"max_uses":       promocode.MaxUses,
+		"used_count":     promocode.UsedCount,
+		"valid_from":     promocode.ValidFrom,
+		"valid_until":    promocode.ValidUntil,
+		"is_active":      promocode.IsActive,
+		"created_by":     promocode.CreatedBy,
+		"created_at":     time.Now(),
+		"updated_at":     time.Now(),
+	})
+
+	return err
+}
+
+func (r *PromocodeRepository) GetByCode(ctx context.Context, code string) (*model.Promocode, error) {goCover_5d9affc06acf__66[0] = 5 ; goCover_5d9affc06acf__66[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__66[2] = 66 ; goCover_5d9affc06acf__66[3] = 1;
+	query := `
+		SELECT id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at
+		FROM promocodes
+		WHERE code = $1
+	`
+
+	promocode := &model.Promocode{}
+	err := r.db.GetContext(ctx, promocode, query, code)
+
+	if err != nil {goCover_5d9affc06acf__66[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__66[7] = 1;
+			return nil, ErrPromocodeNotFound
+		}
+		goCover_5d9affc06acf__66[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__66[4] = 1;return promocode, nil
+}
+
+func (r *PromocodeRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Promocode, error) {goCover_5d9affc06acf__67[0] = 5 ; goCover_5d9affc06acf__67[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__67[2] = 67 ; goCover_5d9affc06acf__67[3] = 1;
+	query := `
+		SELECT id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at
+		FROM promocodes
+		WHERE id = $1
+	`
+
+	promocode := &model.Promocode{}
+	err := r.db.GetContext(ctx, promocode, query, id)
+
+	if err != nil {goCover_5d9affc06acf__67[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__67[7] = 1;
+			return nil, ErrPromocodeNotFound
+		}
+		goCover_5d9affc06acf__67[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__67[4] = 1;return promocode, nil
+}
+
+func (r *PromocodeRepository) GetAll(ctx context.Context, limit, offset int) ([]*model.Promocode, error) {goCover_5d9affc06acf__68[0] = 1 ; goCover_5d9affc06acf__68[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__68[2] = 68 ; goCover_5d9affc06acf__68[3] = 1;
+	query := `
+		SELECT id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at
+		FROM promocodes
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`
+
+	var promocodes []*model.Promocode
+	err := r.db.SelectContext(ctx, &promocodes, query, limit, offset)
+
+	return promocodes, err
+}
+
+func (r *PromocodeRepository) Update(ctx context.Context, promocode *model.Promocode) error {goCover_5d9affc06acf__69[0] = 1 ; goCover_5d9affc06acf__69[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__69[2] = 69 ; goCover_5d9affc06acf__69[3] = 1;
+	query := `
+		UPDATE promocodes
+		SET description = :description, discount_value = :discount_value, min_amount = :min_amount,
+		    max_uses = :max_uses, valid_until = :valid_until, is_active = :is_active, updated_at = :updated_at
+		WHERE id = :id
+	`
+
+	_, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":             promocode.ID,
+		"description":    promocode.Description,
+		"discount_value": promocode.DiscountValue,
+		"min_amount":     promocode.MinAmount,
+		"max_uses":       promocode.MaxUses,
+		"valid_until":    promocode.ValidUntil,
+		"is_active":      promocode.IsActive,
+		"updated_at":     time.Now(),
+	})
+
+	return err
+}
+
+func (r *PromocodeRepository) IncrementUseCount(ctx context.Context, id uuid.UUID) error {goCover_5d9affc06acf__70[0] = 1 ; goCover_5d9affc06acf__70[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__70[2] = 70 ; goCover_5d9affc06acf__70[3] = 1;
+	query := `UPDATE promocodes SET used_count = used_count + 1, updated_at = $2 WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id, time.Now())
+	return err
+}
+
+func (r *PromocodeRepository) Delete(ctx context.Context, id uuid.UUID) error {goCover_5d9affc06acf__71[0] = 1 ; goCover_5d9affc06acf__71[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__71[2] = 71 ; goCover_5d9affc06acf__71[3] = 1;
+	query := `DELETE FROM promocodes WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (r *PromocodeRepository) Count(ctx context.Context) (int, error) {goCover_5d9affc06acf__72[0] = 1 ; goCover_5d9affc06acf__72[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__72[2] = 72 ; goCover_5d9affc06acf__72[3] = 1;
+	query := `SELECT COUNT(*) FROM promocodes`
+	var count int
+	err := r.db.GetContext(ctx, &count, query)
+	return count, err
+}

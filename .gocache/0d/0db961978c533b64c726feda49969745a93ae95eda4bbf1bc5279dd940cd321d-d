@@ -1,0 +1,4 @@
+covervars.go
+database.cover.go
+redis.cover.go
+./database_test.go

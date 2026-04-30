@@ -1,0 +1,157 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\repository\payment_repository.go:1:1
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrPaymentNotFound = errors.New("payment not found")
+)
+
+type PaymentRepositoryInterface interface {
+	Create(ctx context.Context, payment *model.Payment) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Payment, error)
+	GetByBookingID(ctx context.Context, bookingID uuid.UUID) (*model.Payment, error)
+	GetByTransactionID(ctx context.Context, transactionID string) (*model.Payment, error)
+	Update(ctx context.Context, payment *model.Payment) error
+	UpdateStatus(ctx context.Context, id uuid.UUID, status model.PaymentStatus) error
+	SetProviderResponse(ctx context.Context, id uuid.UUID, response interface{}) error
+}
+
+type PaymentRepository struct {
+	db *sqlx.DB
+}
+
+func NewPaymentRepository(db *sqlx.DB) *PaymentRepository {goCover_5d9affc06acf__56[0] = 1 ; goCover_5d9affc06acf__56[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__56[2] = 56 ; goCover_5d9affc06acf__56[3] = 1;
+	return &PaymentRepository{db: db}
+}
+
+func (r *PaymentRepository) Create(ctx context.Context, payment *model.Payment) error {goCover_5d9affc06acf__57[0] = 1 ; goCover_5d9affc06acf__57[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__57[2] = 57 ; goCover_5d9affc06acf__57[3] = 1;
+	query := `
+		INSERT INTO payment_transactions (id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, created_at, updated_at)
+		VALUES (:id, :booking_id, :transaction_id, :amount, :status, :payment_method, :provider, :provider_response, :created_at, :updated_at)
+	`
+
+	_, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":                payment.ID,
+		"booking_id":        payment.BookingID,
+		"transaction_id":    payment.TransactionID,
+		"amount":            payment.Amount,
+		"status":            payment.Status,
+		"payment_method":    payment.PaymentMethod,
+		"provider":          payment.Provider,
+		"provider_response": payment.ProviderResponse,
+		"created_at":        time.Now(),
+		"updated_at":        time.Now(),
+	})
+
+	return err
+}
+
+func (r *PaymentRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Payment, error) {goCover_5d9affc06acf__58[0] = 5 ; goCover_5d9affc06acf__58[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__58[2] = 58 ; goCover_5d9affc06acf__58[3] = 1;
+	query := `
+		SELECT id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, paid_at, created_at, updated_at
+		FROM payment_transactions
+		WHERE id = $1
+	`
+
+	payment := &model.Payment{}
+	err := r.db.GetContext(ctx, payment, query, id)
+
+	if err != nil {goCover_5d9affc06acf__58[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__58[7] = 1;
+			return nil, ErrPaymentNotFound
+		}
+		goCover_5d9affc06acf__58[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__58[4] = 1;return payment, nil
+}
+
+func (r *PaymentRepository) GetByBookingID(ctx context.Context, bookingID uuid.UUID) (*model.Payment, error) {goCover_5d9affc06acf__59[0] = 5 ; goCover_5d9affc06acf__59[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__59[2] = 59 ; goCover_5d9affc06acf__59[3] = 1;
+	query := `
+		SELECT id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, paid_at, created_at, updated_at
+		FROM payment_transactions
+		WHERE booking_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	payment := &model.Payment{}
+	err := r.db.GetContext(ctx, payment, query, bookingID)
+
+	if err != nil {goCover_5d9affc06acf__59[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__59[7] = 1;
+			return nil, ErrPaymentNotFound
+		}
+		goCover_5d9affc06acf__59[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__59[4] = 1;return payment, nil
+}
+
+func (r *PaymentRepository) GetByTransactionID(ctx context.Context, transactionID string) (*model.Payment, error) {goCover_5d9affc06acf__60[0] = 5 ; goCover_5d9affc06acf__60[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__60[2] = 60 ; goCover_5d9affc06acf__60[3] = 1;
+	query := `
+		SELECT id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, paid_at, created_at, updated_at
+		FROM payment_transactions
+		WHERE transaction_id = $1
+	`
+
+	payment := &model.Payment{}
+	err := r.db.GetContext(ctx, payment, query, transactionID)
+
+	if err != nil {goCover_5d9affc06acf__60[5] = 1;
+		if errors.Is(err, sql.ErrNoRows) {goCover_5d9affc06acf__60[7] = 1;
+			return nil, ErrPaymentNotFound
+		}
+		goCover_5d9affc06acf__60[6] = 1;return nil, err
+	}
+
+	goCover_5d9affc06acf__60[4] = 1;return payment, nil
+}
+
+func (r *PaymentRepository) Update(ctx context.Context, payment *model.Payment) error {goCover_5d9affc06acf__61[0] = 1 ; goCover_5d9affc06acf__61[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__61[2] = 61 ; goCover_5d9affc06acf__61[3] = 1;
+	query := `
+		UPDATE payment_transactions
+		SET status = :status, transaction_id = :transaction_id, provider_response = :provider_response,
+		    paid_at = :paid_at, updated_at = :updated_at
+		WHERE id = :id
+	`
+
+	_, err := r.db.NamedExecContext(ctx, query, map[string]interface{}{
+		"id":                payment.ID,
+		"status":            payment.Status,
+		"transaction_id":    payment.TransactionID,
+		"provider_response": payment.ProviderResponse,
+		"paid_at":           payment.PaidAt,
+		"updated_at":        time.Now(),
+	})
+
+	return err
+}
+
+func (r *PaymentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status model.PaymentStatus) error {goCover_5d9affc06acf__62[0] = 1 ; goCover_5d9affc06acf__62[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__62[2] = 62 ; goCover_5d9affc06acf__62[3] = 1;
+	query := `UPDATE payment_transactions SET status = $1, updated_at = $2 WHERE id = $3`
+	_, err := r.db.ExecContext(ctx, query, status, time.Now(), id)
+	return err
+}
+
+func (r *PaymentRepository) SetProviderResponse(ctx context.Context, id uuid.UUID, response interface{}) error {goCover_5d9affc06acf__63[0] = 3 ; goCover_5d9affc06acf__63[1] = goCover_5d9affc06acf_P ; goCover_5d9affc06acf__63[2] = 63 ; goCover_5d9affc06acf__63[3] = 1;
+	responseJSON, err := json.Marshal(response)
+	if err != nil {goCover_5d9affc06acf__63[5] = 1;
+		return err
+	}
+
+	goCover_5d9affc06acf__63[4] = 1;query := `UPDATE payment_transactions SET provider_response = $1, updated_at = $2 WHERE id = $3`
+	_, err = r.db.ExecContext(ctx, query, string(responseJSON), time.Now(), id)
+	return err
+}

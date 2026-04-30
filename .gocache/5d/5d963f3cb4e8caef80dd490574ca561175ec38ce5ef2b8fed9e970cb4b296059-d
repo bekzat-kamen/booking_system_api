@@ -1,0 +1,121 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\service\jwt_service.go:1:1
+package service
+
+import (
+	"errors"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrInvalidToken = errors.New("invalid token")
+	ErrExpiredToken = errors.New("token expired")
+)
+
+type Claims struct {
+	UserID uuid.UUID `json:"user_id"`
+	Email  string    `json:"email"`
+	Role   string    `json:"role"`
+	jwt.RegisteredClaims
+}
+
+// JWTService работает с JWT токенами
+type JWTService struct {
+	accessSecret  []byte
+	refreshSecret []byte
+	accessExpire  time.Duration
+	refreshExpire time.Duration
+}
+
+func NewJWTService(accessSecret, refreshSecret string, accessExpire, refreshExpire string) (*JWTService, error) {goCover_038a240e8706__62[0] = 5 ; goCover_038a240e8706__62[1] = goCover_038a240e8706_P ; goCover_038a240e8706__62[2] = 62 ; goCover_038a240e8706__62[3] = 1;
+	accessDur, err := time.ParseDuration(accessExpire)
+	if err != nil {goCover_038a240e8706__62[6] = 1;
+		return nil, errors.New("invalid access expire duration")
+	}
+
+	goCover_038a240e8706__62[4] = 1;refreshDur, err := time.ParseDuration(refreshExpire)
+	if err != nil {goCover_038a240e8706__62[7] = 1;
+		return nil, errors.New("invalid refresh expire duration")
+	}
+
+	goCover_038a240e8706__62[5] = 1;return &JWTService{
+		accessSecret:  []byte(accessSecret),
+		refreshSecret: []byte(refreshSecret),
+		accessExpire:  accessDur,
+		refreshExpire: refreshDur,
+	}, nil
+}
+
+func (s *JWTService) GenerateTokens(userID uuid.UUID, email string, role string) (string, string, error) {goCover_038a240e8706__63[0] = 5 ; goCover_038a240e8706__63[1] = goCover_038a240e8706_P ; goCover_038a240e8706__63[2] = 63 ; goCover_038a240e8706__63[3] = 1;
+	// Генерируем Access Token
+	accessToken, err := s.generateToken(userID, email, role, s.accessSecret, s.accessExpire)
+	if err != nil {goCover_038a240e8706__63[6] = 1;
+		return "", "", err
+	}
+
+	goCover_038a240e8706__63[4] = 1;refreshToken, err := s.generateToken(userID, email, role, s.refreshSecret, s.refreshExpire)
+	if err != nil {goCover_038a240e8706__63[7] = 1;
+		return "", "", err
+	}
+
+	goCover_038a240e8706__63[5] = 1;return accessToken, refreshToken, nil
+}
+
+func (s *JWTService) generateToken(userID uuid.UUID, email string, role string, secret []byte, expire time.Duration) (string, error) {goCover_038a240e8706__64[0] = 1 ; goCover_038a240e8706__64[1] = goCover_038a240e8706_P ; goCover_038a240e8706__64[2] = 64 ; goCover_038a240e8706__64[3] = 1;
+	claims := &Claims{
+		UserID: userID,
+		Email:  email,
+		Role:   role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expire)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
+}
+
+func (s *JWTService) ValidateAccessToken(tokenString string) (*Claims, error) {goCover_038a240e8706__65[0] = 1 ; goCover_038a240e8706__65[1] = goCover_038a240e8706_P ; goCover_038a240e8706__65[2] = 65 ; goCover_038a240e8706__65[3] = 1;
+	return s.validateToken(tokenString, s.accessSecret)
+}
+
+func (s *JWTService) ValidateRefreshToken(tokenString string) (*Claims, error) {goCover_038a240e8706__66[0] = 1 ; goCover_038a240e8706__66[1] = goCover_038a240e8706_P ; goCover_038a240e8706__66[2] = 66 ; goCover_038a240e8706__66[3] = 1;
+	return s.validateToken(tokenString, s.refreshSecret)
+}
+
+func (s *JWTService) validateToken(tokenString string, secret []byte) (*Claims, error) {goCover_038a240e8706__67[0] = 11 ; goCover_038a240e8706__67[1] = goCover_038a240e8706_P ; goCover_038a240e8706__67[2] = 67 ; goCover_038a240e8706__67[3] = 1;
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {goCover_038a240e8706__67[7] = 1;
+
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {goCover_038a240e8706__67[9] = 1;
+			return nil, ErrInvalidToken
+		}
+		goCover_038a240e8706__67[8] = 1;return secret, nil
+	})
+
+	goCover_038a240e8706__67[4] = 1;if err != nil {goCover_038a240e8706__67[10] = 1;
+		if errors.Is(err, jwt.ErrTokenExpired) {goCover_038a240e8706__67[12] = 1;
+			return nil, ErrExpiredToken
+		}
+		goCover_038a240e8706__67[11] = 1;return nil, ErrInvalidToken
+	}
+
+	goCover_038a240e8706__67[5] = 1;claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {goCover_038a240e8706__67[13] = 1;
+		return nil, ErrInvalidToken
+	}
+
+	goCover_038a240e8706__67[6] = 1;return claims, nil
+}
+
+func (s *JWTService) RefreshTokens(refreshToken string) (string, string, error) {goCover_038a240e8706__68[0] = 3 ; goCover_038a240e8706__68[1] = goCover_038a240e8706_P ; goCover_038a240e8706__68[2] = 68 ; goCover_038a240e8706__68[3] = 1;
+	claims, err := s.ValidateRefreshToken(refreshToken)
+	if err != nil {goCover_038a240e8706__68[5] = 1;
+		return "", "", err
+	}
+
+	goCover_038a240e8706__68[4] = 1;return s.GenerateTokens(claims.UserID, claims.Email, claims.Role)
+}

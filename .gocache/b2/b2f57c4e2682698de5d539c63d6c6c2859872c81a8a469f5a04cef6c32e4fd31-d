@@ -1,0 +1,27 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\handler\dashboard_handler.go:1:1
+package handler
+
+import (
+	"net/http"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/service"
+	"github.com/gin-gonic/gin"
+)
+
+type DashboardHandler struct {
+	dashboardService service.DashboardServiceInterface
+}
+
+func NewDashboardHandler(dashboardService service.DashboardServiceInterface) *DashboardHandler {goCover_fb525f7f7f88__44[0] = 1 ; goCover_fb525f7f7f88__44[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__44[2] = 44 ; goCover_fb525f7f7f88__44[3] = 1;
+	return &DashboardHandler{dashboardService: dashboardService}
+}
+
+func (h *DashboardHandler) GetStats(c *gin.Context) {goCover_fb525f7f7f88__45[0] = 3 ; goCover_fb525f7f7f88__45[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__45[2] = 45 ; goCover_fb525f7f7f88__45[3] = 1;
+	stats, err := h.dashboardService.GetDashboardStats(c.Request.Context())
+	if err != nil {goCover_fb525f7f7f88__45[5] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get dashboard stats"})
+		return
+	}
+
+	goCover_fb525f7f7f88__45[4] = 1;c.JSON(http.StatusOK, stats)
+}

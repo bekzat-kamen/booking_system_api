@@ -1,0 +1,42 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\database\redis.go:1:1
+package database
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/redis/go-redis/v9"
+)
+
+var ctx = context.Background()
+
+type RedisConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
+func NewRedisConnection(cfg RedisConfig) (*redis.Client, error) {goCover_90dab0c867d6__2[0] = 3 ; goCover_90dab0c867d6__2[1] = goCover_90dab0c867d6_P ; goCover_90dab0c867d6__2[2] = 2 ; goCover_90dab0c867d6__2[3] = 1;
+	client := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		Password: cfg.Password,
+		DB:       cfg.DB,
+	})
+
+	_, err := client.Ping(ctx).Result()
+	if err != nil {goCover_90dab0c867d6__2[5] = 1;
+		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+	}
+
+	goCover_90dab0c867d6__2[4] = 1;log.Println("Redis connected successfully")
+	return client, nil
+}
+
+func CloseRedis(client *redis.Client) error {goCover_90dab0c867d6__3[0] = 3 ; goCover_90dab0c867d6__3[1] = goCover_90dab0c867d6_P ; goCover_90dab0c867d6__3[2] = 3 ; goCover_90dab0c867d6__3[3] = 1;
+	if client != nil {goCover_90dab0c867d6__3[5] = 1;
+		return client.Close()
+	}
+	goCover_90dab0c867d6__3[4] = 1;return nil
+}

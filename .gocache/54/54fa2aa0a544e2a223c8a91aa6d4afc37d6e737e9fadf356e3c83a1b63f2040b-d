@@ -1,0 +1,219 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\service\promocode_service.go:1:1
+package service
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrInvalidDiscountValue = errors.New("invalid discount value")
+)
+
+type PromocodeService struct {
+	promocodeRepo repository.PromocodeRepositoryInterface
+}
+
+func NewPromocodeService(promocodeRepo repository.PromocodeRepositoryInterface) *PromocodeService {goCover_038a240e8706__76[0] = 1 ; goCover_038a240e8706__76[1] = goCover_038a240e8706_P ; goCover_038a240e8706__76[2] = 76 ; goCover_038a240e8706__76[3] = 1;
+	return &PromocodeService{promocodeRepo: promocodeRepo}
+}
+
+func (s *PromocodeService) CreatePromocode(ctx context.Context, createdBy uuid.UUID, req *model.CreatePromocodeRequest) (*model.Promocode, error) {goCover_038a240e8706__77[0] = 9 ; goCover_038a240e8706__77[1] = goCover_038a240e8706_P ; goCover_038a240e8706__77[2] = 77 ; goCover_038a240e8706__77[3] = 1;
+
+	if req.DiscountType == model.DiscountTypePercent && (req.DiscountValue < 0 || req.DiscountValue > 100) {goCover_038a240e8706__77[7] = 1;
+		return nil, ErrInvalidDiscountValue
+	}
+
+	goCover_038a240e8706__77[4] = 1;var validUntil *time.Time
+	if req.ValidUntil != "" {goCover_038a240e8706__77[8] = 1;
+		parsed, err := time.Parse(time.RFC3339, req.ValidUntil)
+		if err != nil {goCover_038a240e8706__77[10] = 1;
+			return nil, errors.New("invalid valid_until format, use RFC3339")
+		}
+		goCover_038a240e8706__77[9] = 1;validUntil = &parsed
+	}
+
+	goCover_038a240e8706__77[5] = 1;promocode := &model.Promocode{
+		ID:            uuid.New(),
+		Code:          req.Code,
+		Description:   req.Description,
+		DiscountType:  req.DiscountType,
+		DiscountValue: req.DiscountValue,
+		MinAmount:     req.MinAmount,
+		MaxUses:       req.MaxUses,
+		UsedCount:     0,
+		ValidFrom:     time.Now(),
+		ValidUntil:    validUntil,
+		IsActive:      true,
+		CreatedBy:     &createdBy,
+	}
+	if err := s.promocodeRepo.Create(ctx, promocode); err != nil {goCover_038a240e8706__77[11] = 1;
+		return nil, errors.New("failed to create promocode")
+	}
+
+	goCover_038a240e8706__77[6] = 1;return promocode, nil
+}
+
+func (s *PromocodeService) ValidatePromocode(ctx context.Context, req *model.ValidatePromocodeRequest) (*model.PromocodeValidationResponse, error) {goCover_038a240e8706__78[0] = 18 ; goCover_038a240e8706__78[1] = goCover_038a240e8706_P ; goCover_038a240e8706__78[2] = 78 ; goCover_038a240e8706__78[3] = 1;
+
+	promocode, err := s.promocodeRepo.GetByCode(ctx, req.Code)
+	if err != nil {goCover_038a240e8706__78[12] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:   false,
+			Message: "promocode not found",
+		}, nil
+	}
+
+	goCover_038a240e8706__78[4] = 1;if !promocode.IsActive {goCover_038a240e8706__78[13] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:   false,
+			Message: "promocode is not active",
+		}, nil
+	}
+
+	goCover_038a240e8706__78[5] = 1;now := time.Now()
+	if now.Before(promocode.ValidFrom) {goCover_038a240e8706__78[14] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:   false,
+			Message: "promocode is not yet valid",
+		}, nil
+	}
+	goCover_038a240e8706__78[6] = 1;if promocode.ValidUntil != nil && now.After(*promocode.ValidUntil) {goCover_038a240e8706__78[15] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:   false,
+			Message: "promocode has expired",
+		}, nil
+	}
+
+	goCover_038a240e8706__78[7] = 1;if promocode.MaxUses > 0 && promocode.UsedCount >= promocode.MaxUses {goCover_038a240e8706__78[16] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:   false,
+			Message: "promocode usage limit reached",
+		}, nil
+	}
+
+	goCover_038a240e8706__78[8] = 1;if req.TotalAmount < promocode.MinAmount {goCover_038a240e8706__78[17] = 1;
+		return &model.PromocodeValidationResponse{
+			Valid:          false,
+			Message:        "minimum amount not met",
+			OriginalAmount: req.TotalAmount,
+		}, nil
+	}
+
+	goCover_038a240e8706__78[9] = 1;discountAmount := 0.0
+	if promocode.DiscountType == model.DiscountTypePercent {goCover_038a240e8706__78[18] = 1;
+		discountAmount = req.TotalAmount * (promocode.DiscountValue / 100)
+	} else{ goCover_038a240e8706__78[19] = 1;{
+		discountAmount = promocode.DiscountValue
+	}}
+
+	goCover_038a240e8706__78[10] = 1;if discountAmount > req.TotalAmount {goCover_038a240e8706__78[20] = 1;
+		discountAmount = req.TotalAmount
+	}
+
+	goCover_038a240e8706__78[11] = 1;finalAmount := req.TotalAmount - discountAmount
+
+	return &model.PromocodeValidationResponse{
+		Valid:          true,
+		Code:           promocode.Code,
+		DiscountType:   string(promocode.DiscountType),
+		DiscountValue:  promocode.DiscountValue,
+		OriginalAmount: req.TotalAmount,
+		DiscountAmount: discountAmount,
+		FinalAmount:    finalAmount,
+	}, nil
+}
+
+func (s *PromocodeService) ApplyPromocode(ctx context.Context, code string) error {goCover_038a240e8706__79[0] = 3 ; goCover_038a240e8706__79[1] = goCover_038a240e8706_P ; goCover_038a240e8706__79[2] = 79 ; goCover_038a240e8706__79[3] = 1;
+	promocode, err := s.promocodeRepo.GetByCode(ctx, code)
+	if err != nil {goCover_038a240e8706__79[5] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__79[4] = 1;return s.promocodeRepo.IncrementUseCount(ctx, promocode.ID)
+}
+
+func (s *PromocodeService) GetPromocode(ctx context.Context, id uuid.UUID) (*model.Promocode, error) {goCover_038a240e8706__80[0] = 1 ; goCover_038a240e8706__80[1] = goCover_038a240e8706_P ; goCover_038a240e8706__80[2] = 80 ; goCover_038a240e8706__80[3] = 1;
+	return s.promocodeRepo.GetByID(ctx, id)
+}
+
+func (s *PromocodeService) GetAllPromocodes(ctx context.Context, page, limit int) ([]*model.Promocode, int, error) {goCover_038a240e8706__81[0] = 9 ; goCover_038a240e8706__81[1] = goCover_038a240e8706_P ; goCover_038a240e8706__81[2] = 81 ; goCover_038a240e8706__81[3] = 1;
+	if page < 1 {goCover_038a240e8706__81[8] = 1;
+		page = 1
+	}
+	goCover_038a240e8706__81[4] = 1;if limit < 1 || limit > 100 {goCover_038a240e8706__81[9] = 1;
+		limit = 20
+	}
+
+	goCover_038a240e8706__81[5] = 1;offset := (page - 1) * limit
+
+	promocodes, err := s.promocodeRepo.GetAll(ctx, limit, offset)
+	if err != nil {goCover_038a240e8706__81[10] = 1;
+		return nil, 0, err
+	}
+
+	goCover_038a240e8706__81[6] = 1;total, err := s.promocodeRepo.Count(ctx)
+	if err != nil {goCover_038a240e8706__81[11] = 1;
+		return nil, 0, err
+	}
+
+	goCover_038a240e8706__81[7] = 1;return promocodes, total, nil
+}
+
+func (s *PromocodeService) UpdatePromocode(ctx context.Context, id uuid.UUID, req *model.UpdatePromocodeRequest) (*model.Promocode, error) {goCover_038a240e8706__82[0] = 21 ; goCover_038a240e8706__82[1] = goCover_038a240e8706_P ; goCover_038a240e8706__82[2] = 82 ; goCover_038a240e8706__82[3] = 1;
+	promocode, err := s.promocodeRepo.GetByID(ctx, id)
+	if err != nil {goCover_038a240e8706__82[12] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__82[4] = 1;if req.Description != "" {goCover_038a240e8706__82[13] = 1;
+		promocode.Description = req.Description
+	}
+	goCover_038a240e8706__82[5] = 1;if req.DiscountValue > 0 {goCover_038a240e8706__82[14] = 1;
+		if promocode.DiscountType == model.DiscountTypePercent && req.DiscountValue > 100 {goCover_038a240e8706__82[16] = 1;
+			return nil, ErrInvalidDiscountValue
+		}
+		goCover_038a240e8706__82[15] = 1;promocode.DiscountValue = req.DiscountValue
+	}
+	goCover_038a240e8706__82[6] = 1;if req.MinAmount > 0 {goCover_038a240e8706__82[17] = 1;
+		promocode.MinAmount = req.MinAmount
+	}
+	goCover_038a240e8706__82[7] = 1;if req.MaxUses > 0 {goCover_038a240e8706__82[18] = 1;
+		promocode.MaxUses = req.MaxUses
+	}
+	goCover_038a240e8706__82[8] = 1;if req.ValidUntil != "" {goCover_038a240e8706__82[19] = 1;
+		parsed, err := time.Parse(time.RFC3339, req.ValidUntil)
+		if err != nil {goCover_038a240e8706__82[21] = 1;
+			return nil, errors.New("invalid valid_until format")
+		}
+		goCover_038a240e8706__82[20] = 1;promocode.ValidUntil = &parsed
+	}
+	goCover_038a240e8706__82[9] = 1;if req.IsActive != nil {goCover_038a240e8706__82[22] = 1;
+		promocode.IsActive = *req.IsActive
+	}
+
+	goCover_038a240e8706__82[10] = 1;if err := s.promocodeRepo.Update(ctx, promocode); err != nil {goCover_038a240e8706__82[23] = 1;
+		return nil, errors.New("failed to update promocode")
+	}
+
+	goCover_038a240e8706__82[11] = 1;return promocode, nil
+}
+
+func (s *PromocodeService) DeletePromocode(ctx context.Context, id uuid.UUID) error {goCover_038a240e8706__83[0] = 1 ; goCover_038a240e8706__83[1] = goCover_038a240e8706_P ; goCover_038a240e8706__83[2] = 83 ; goCover_038a240e8706__83[3] = 1;
+	return s.promocodeRepo.Delete(ctx, id)
+}
+
+func (s *PromocodeService) DeactivatePromocode(ctx context.Context, id uuid.UUID) error {goCover_038a240e8706__84[0] = 3 ; goCover_038a240e8706__84[1] = goCover_038a240e8706_P ; goCover_038a240e8706__84[2] = 84 ; goCover_038a240e8706__84[3] = 1;
+	promocode, err := s.promocodeRepo.GetByID(ctx, id)
+	if err != nil {goCover_038a240e8706__84[5] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__84[4] = 1;promocode.IsActive = false
+	return s.promocodeRepo.Update(ctx, promocode)
+}

@@ -1,0 +1,96 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\handler\seat_handler.go:1:1
+package handler
+
+import (
+	"net/http"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/bekzat-kamen/booking_system_api/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type SeatHandler struct {
+	seatService service.SeatServiceInterface
+}
+
+func NewSeatHandler(seatService service.SeatServiceInterface) *SeatHandler {goCover_fb525f7f7f88__69[0] = 1 ; goCover_fb525f7f7f88__69[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__69[2] = 69 ; goCover_fb525f7f7f88__69[3] = 1;
+	return &SeatHandler{seatService: seatService}
+}
+
+func (h *SeatHandler) GenerateSeats(c *gin.Context) {goCover_fb525f7f7f88__70[0] = 15 ; goCover_fb525f7f7f88__70[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__70[2] = 70 ; goCover_fb525f7f7f88__70[3] = 1;
+	organizerID, exists := c.Get("user_id")
+	if !exists {goCover_fb525f7f7f88__70[8] = 1;
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	goCover_fb525f7f7f88__70[4] = 1;eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__70[9] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__70[5] = 1;var req model.GenerateSeatsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {goCover_fb525f7f7f88__70[10] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	goCover_fb525f7f7f88__70[6] = 1;err = h.seatService.GenerateSeats(c.Request.Context(), eventID, organizerID.(uuid.UUID), &req)
+	if err != nil {goCover_fb525f7f7f88__70[11] = 1;
+		if err == service.ErrSeatsAlreadyGenerated {goCover_fb525f7f7f88__70[15] = 1;
+			c.JSON(http.StatusConflict, gin.H{"error": "seats already generated for this event"})
+			return
+		}
+		goCover_fb525f7f7f88__70[12] = 1;if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__70[16] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__70[13] = 1;if err == service.ErrEventForbidden {goCover_fb525f7f7f88__70[17] = 1;
+			c.JSON(http.StatusForbidden, gin.H{"error": "you are not allowed to manage seats for this event"})
+			return
+		}
+		goCover_fb525f7f7f88__70[14] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate seats"})
+		return
+	}
+
+	goCover_fb525f7f7f88__70[7] = 1;c.JSON(http.StatusCreated, gin.H{"message": "seats generated successfully"})
+}
+
+func (h *SeatHandler) GetSeatMap(c *gin.Context) {goCover_fb525f7f7f88__71[0] = 7 ; goCover_fb525f7f7f88__71[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__71[2] = 71 ; goCover_fb525f7f7f88__71[3] = 1;
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__71[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__71[4] = 1;seatMap, err := h.seatService.GetSeatMap(c.Request.Context(), eventID)
+	if err != nil {goCover_fb525f7f7f88__71[7] = 1;
+		if err == repository.ErrEventNotFound {goCover_fb525f7f7f88__71[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "event not found"})
+			return
+		}
+		goCover_fb525f7f7f88__71[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get seat map"})
+		return
+	}
+
+	goCover_fb525f7f7f88__71[5] = 1;c.JSON(http.StatusOK, seatMap)
+}
+
+func (h *SeatHandler) GetAvailableSeats(c *gin.Context) {goCover_fb525f7f7f88__72[0] = 5 ; goCover_fb525f7f7f88__72[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__72[2] = 72 ; goCover_fb525f7f7f88__72[3] = 1;
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__72[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__72[4] = 1;seats, err := h.seatService.GetAvailableSeats(c.Request.Context(), eventID)
+	if err != nil {goCover_fb525f7f7f88__72[7] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get available seats"})
+		return
+	}
+
+	goCover_fb525f7f7f88__72[5] = 1;c.JSON(http.StatusOK, gin.H{"seats": seats})
+}

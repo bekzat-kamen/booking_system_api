@@ -1,0 +1,179 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\service\payment_service.go:1:1
+package service
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrPaymentAlreadyExists = errors.New("payment already exists for this booking")
+	ErrInvalidPaymentStatus = errors.New("invalid payment status")
+)
+
+type PaymentService struct {
+	paymentRepo    repository.PaymentRepositoryInterface
+	bookingRepo    repository.BookingRepositoryInterface
+	bookingService BookingServiceInterface
+}
+
+func NewPaymentService(
+	paymentRepo repository.PaymentRepositoryInterface,
+	bookingRepo repository.BookingRepositoryInterface,
+	bookingService BookingServiceInterface,
+) *PaymentService {goCover_038a240e8706__69[0] = 1 ; goCover_038a240e8706__69[1] = goCover_038a240e8706_P ; goCover_038a240e8706__69[2] = 69 ; goCover_038a240e8706__69[3] = 1;
+	return &PaymentService{
+		paymentRepo:    paymentRepo,
+		bookingRepo:    bookingRepo,
+		bookingService: bookingService,
+	}
+}
+
+func (s *PaymentService) CreatePayment(ctx context.Context, req *model.CreatePaymentRequest) (*model.Payment, error) {goCover_038a240e8706__70[0] = 11 ; goCover_038a240e8706__70[1] = goCover_038a240e8706_P ; goCover_038a240e8706__70[2] = 70 ; goCover_038a240e8706__70[3] = 1;
+
+	booking, err := s.bookingRepo.GetByID(ctx, req.BookingID)
+	if err != nil {goCover_038a240e8706__70[8] = 1;
+		if errors.Is(err, repository.ErrBookingNotFound) {goCover_038a240e8706__70[10] = 1;
+			return nil, repository.ErrBookingNotFound
+		}
+		goCover_038a240e8706__70[9] = 1;return nil, err
+	}
+
+	goCover_038a240e8706__70[4] = 1;if booking.Status != model.BookingStatusPending {goCover_038a240e8706__70[11] = 1;
+		return nil, errors.New("booking is not in pending status")
+	}
+
+	goCover_038a240e8706__70[5] = 1;_, err = s.paymentRepo.GetByBookingID(ctx, req.BookingID)
+	if err == nil {goCover_038a240e8706__70[12] = 1;
+		return nil, ErrPaymentAlreadyExists
+	}
+
+	goCover_038a240e8706__70[6] = 1;payment := &model.Payment{
+		ID:            uuid.New(),
+		BookingID:     req.BookingID,
+		TransactionID: generateMockTransactionID(),
+		Amount:        booking.FinalAmount,
+		Status:        model.PaymentStatusPending,
+		PaymentMethod: req.PaymentMethod,
+		Provider:      "mock", // Для имитации
+		PaidAt:        nil,
+	}
+
+	if err := s.paymentRepo.Create(ctx, payment); err != nil {goCover_038a240e8706__70[13] = 1;
+		return nil, errors.New("failed to create payment")
+	}
+
+	goCover_038a240e8706__70[7] = 1;return payment, nil
+}
+
+func (s *PaymentService) ProcessPayment(ctx context.Context, paymentID uuid.UUID) (*model.Payment, error) {goCover_038a240e8706__71[0] = 11 ; goCover_038a240e8706__71[1] = goCover_038a240e8706_P ; goCover_038a240e8706__71[2] = 71 ; goCover_038a240e8706__71[3] = 1;
+
+	payment, err := s.paymentRepo.GetByID(ctx, paymentID)
+	if err != nil {goCover_038a240e8706__71[8] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__71[4] = 1;if payment.Status != model.PaymentStatusPending {goCover_038a240e8706__71[9] = 1;
+		return nil, ErrInvalidPaymentStatus
+	}
+
+	goCover_038a240e8706__71[5] = 1;now := time.Now()
+	payment.Status = model.PaymentStatusSuccess
+	payment.PaidAt = &now
+	payment.ProviderResponse = `{"mock": true, "status": "success", "message": "Payment simulated"}`
+
+	if err := s.paymentRepo.Update(ctx, payment); err != nil {goCover_038a240e8706__71[10] = 1;
+		return nil, errors.New("failed to update payment")
+	}
+
+	goCover_038a240e8706__71[6] = 1;if err := s.bookingService.ConfirmBooking(ctx, payment.BookingID); err != nil {goCover_038a240e8706__71[11] = 1;
+		payment.Status = model.PaymentStatusFailed
+		if updateErr := s.paymentRepo.Update(ctx, payment); updateErr != nil {goCover_038a240e8706__71[13] = 1;
+			return nil, errors.New("failed to confirm booking and mark payment as failed")
+		}
+		goCover_038a240e8706__71[12] = 1;return nil, errors.New("failed to confirm booking")
+	}
+
+	goCover_038a240e8706__71[7] = 1;return payment, nil
+}
+
+func (s *PaymentService) ProcessWebhook(ctx context.Context, req *model.WebhookRequest) error {goCover_038a240e8706__72[0] = 14 ; goCover_038a240e8706__72[1] = goCover_038a240e8706_P ; goCover_038a240e8706__72[2] = 72 ; goCover_038a240e8706__72[3] = 1;
+	payment, err := s.paymentRepo.GetByTransactionID(ctx, req.TransactionID)
+	if err != nil {goCover_038a240e8706__72[9] = 1;
+		return err
+	}
+
+	// 2. Проверяем подпись (в реальности)
+	// if !verifySignature(req.Signature, payment) {
+	//     return errors.New("invalid signature")
+	// }
+
+	goCover_038a240e8706__72[4] = 1;var newStatus model.PaymentStatus
+	switch req.Status {
+	case "success", "succeeded":goCover_038a240e8706__72[10] = 1;
+		newStatus = model.PaymentStatusSuccess
+	case "failed", "error":goCover_038a240e8706__72[11] = 1;
+		newStatus = model.PaymentStatusFailed
+	case "refunded":goCover_038a240e8706__72[12] = 1;
+		newStatus = model.PaymentStatusRefunded
+	default:goCover_038a240e8706__72[13] = 1;
+		return ErrInvalidPaymentStatus
+	}
+
+	goCover_038a240e8706__72[5] = 1;payment.Status = newStatus
+	if newStatus == model.PaymentStatusSuccess {goCover_038a240e8706__72[14] = 1;
+		now := time.Now()
+		payment.PaidAt = &now
+	}
+
+	goCover_038a240e8706__72[6] = 1;if err := s.paymentRepo.Update(ctx, payment); err != nil {goCover_038a240e8706__72[15] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__72[7] = 1;if newStatus == model.PaymentStatusSuccess {goCover_038a240e8706__72[16] = 1;
+		return s.bookingService.ConfirmBooking(ctx, payment.BookingID)
+	}
+
+	goCover_038a240e8706__72[8] = 1;return nil
+}
+
+func (s *PaymentService) GetPayment(ctx context.Context, id uuid.UUID) (*model.PaymentResponse, error) {goCover_038a240e8706__73[0] = 3 ; goCover_038a240e8706__73[1] = goCover_038a240e8706_P ; goCover_038a240e8706__73[2] = 73 ; goCover_038a240e8706__73[3] = 1;
+	payment, err := s.paymentRepo.GetByID(ctx, id)
+	if err != nil {goCover_038a240e8706__73[5] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__73[4] = 1;return &model.PaymentResponse{
+		ID:            payment.ID,
+		BookingID:     payment.BookingID,
+		Amount:        payment.Amount,
+		Status:        payment.Status,
+		PaymentMethod: payment.PaymentMethod,
+		PaidAt:        payment.PaidAt,
+	}, nil
+}
+
+func (s *PaymentService) GetPaymentByBooking(ctx context.Context, bookingID uuid.UUID) (*model.PaymentResponse, error) {goCover_038a240e8706__74[0] = 3 ; goCover_038a240e8706__74[1] = goCover_038a240e8706_P ; goCover_038a240e8706__74[2] = 74 ; goCover_038a240e8706__74[3] = 1;
+	payment, err := s.paymentRepo.GetByBookingID(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__74[5] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__74[4] = 1;return &model.PaymentResponse{
+		ID:            payment.ID,
+		BookingID:     payment.BookingID,
+		Amount:        payment.Amount,
+		Status:        payment.Status,
+		PaymentMethod: payment.PaymentMethod,
+		PaidAt:        payment.PaidAt,
+	}, nil
+}
+func generateMockTransactionID() string {goCover_038a240e8706__75[0] = 1 ; goCover_038a240e8706__75[1] = goCover_038a240e8706_P ; goCover_038a240e8706__75[2] = 75 ; goCover_038a240e8706__75[3] = 1;
+	return fmt.Sprintf("MOCK_%d", time.Now().UnixNano())
+}

@@ -1,0 +1,316 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\service\booking_service.go:1:1
+package service
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrSeatsNotAvailable = errors.New("one or more seats are not available")
+	ErrBookingExpired    = errors.New("booking has expired")
+	ErrCannotCancel      = errors.New("cannot cancel this booking")
+)
+
+type BookingService struct {
+	bookingRepo repository.BookingRepositoryInterface
+	seatRepo    repository.SeatRepositoryInterface
+	eventRepo   repository.EventRepositoryInterface
+}
+
+func NewBookingService(
+	bookingRepo repository.BookingRepositoryInterface,
+	seatRepo repository.SeatRepositoryInterface,
+	eventRepo repository.EventRepositoryInterface,
+) *BookingService {goCover_038a240e8706__44[0] = 1 ; goCover_038a240e8706__44[1] = goCover_038a240e8706_P ; goCover_038a240e8706__44[2] = 44 ; goCover_038a240e8706__44[3] = 1;
+	return &BookingService{
+		bookingRepo: bookingRepo,
+		seatRepo:    seatRepo,
+		eventRepo:   eventRepo,
+	}
+}
+
+func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, req *model.CreateBookingRequest) (*model.BookingResponse, error) {goCover_038a240e8706__45[0] = 26 ; goCover_038a240e8706__45[1] = goCover_038a240e8706_P ; goCover_038a240e8706__45[2] = 45 ; goCover_038a240e8706__45[3] = 1;
+	event, err := s.eventRepo.GetByID(ctx, req.EventID)
+	if err != nil {goCover_038a240e8706__45[11] = 1;
+		if errors.Is(err, repository.ErrEventNotFound) {goCover_038a240e8706__45[13] = 1;
+			return nil, repository.ErrEventNotFound
+		}
+		goCover_038a240e8706__45[12] = 1;return nil, err
+	}
+
+	goCover_038a240e8706__45[4] = 1;seats := make([]*model.Seat, 0, len(req.SeatIDs))
+	totalAmount := 0.0
+
+	for _, seatID := range req.SeatIDs {goCover_038a240e8706__45[14] = 1;
+		seat, err := s.seatRepo.GetByID(ctx, seatID)
+		if err != nil {goCover_038a240e8706__45[18] = 1;
+			return nil, repository.ErrSeatNotFound
+		}
+
+		goCover_038a240e8706__45[15] = 1;if seat.EventID != req.EventID {goCover_038a240e8706__45[19] = 1;
+			return nil, errors.New("seat does not belong to this event")
+		}
+
+		goCover_038a240e8706__45[16] = 1;if seat.Status != model.SeatStatusAvailable {goCover_038a240e8706__45[20] = 1;
+			return nil, ErrSeatsNotAvailable
+		}
+
+		goCover_038a240e8706__45[17] = 1;seats = append(seats, seat)
+		totalAmount += seat.Price
+	}
+
+	goCover_038a240e8706__45[5] = 1;if event.AvailableSeats < len(req.SeatIDs) {goCover_038a240e8706__45[21] = 1;
+		return nil, errors.New("not enough available seats")
+	}
+
+	goCover_038a240e8706__45[6] = 1;booking := &model.Booking{
+		ID:          uuid.New(),
+		UserID:      userID,
+		EventID:     req.EventID,
+		TotalAmount: totalAmount,
+		Discount:    0,
+		FinalAmount: totalAmount,
+		Status:      model.BookingStatusPending,
+		ExpiresAt:   time.Now().Add(15 * time.Minute),
+	}
+
+	bookingSeats := make([]*model.BookingSeat, 0, len(req.SeatIDs))
+	for _, seat := range seats {goCover_038a240e8706__45[22] = 1;
+		bookingSeats = append(bookingSeats, &model.BookingSeat{
+			BookingID: booking.ID,
+			SeatID:    seat.ID,
+			Price:     seat.Price,
+		})
+	}
+
+	goCover_038a240e8706__45[7] = 1;if err := s.bookingRepo.Create(ctx, booking, bookingSeats); err != nil {goCover_038a240e8706__45[23] = 1;
+		return nil, errors.New("failed to create booking")
+	}
+
+	goCover_038a240e8706__45[8] = 1;for _, seat := range seats {goCover_038a240e8706__45[24] = 1;
+		seat.Status = model.SeatStatusReserved
+		if err := s.seatRepo.Update(ctx, seat); err != nil {goCover_038a240e8706__45[25] = 1;
+			if rollbackErr := s.bookingRepo.UpdateStatus(ctx, booking.ID, model.BookingStatusCancelled); rollbackErr != nil {goCover_038a240e8706__45[27] = 1;
+				return nil, errors.New("failed to reserve seats and rollback booking")
+			}
+			goCover_038a240e8706__45[26] = 1;return nil, errors.New("failed to reserve seats")
+		}
+	}
+
+	goCover_038a240e8706__45[9] = 1;event.AvailableSeats -= len(req.SeatIDs)
+	if err := s.eventRepo.Update(ctx, event); err != nil {goCover_038a240e8706__45[28] = 1;
+		return nil, errors.New("failed to update event seats")
+	}
+
+	goCover_038a240e8706__45[10] = 1;return s.getBookingWithSeats(ctx, booking.ID)
+}
+
+func (s *BookingService) GetBooking(ctx context.Context, id uuid.UUID) (*model.BookingResponse, error) {goCover_038a240e8706__46[0] = 3 ; goCover_038a240e8706__46[1] = goCover_038a240e8706_P ; goCover_038a240e8706__46[2] = 46 ; goCover_038a240e8706__46[3] = 1;
+	booking, err := s.bookingRepo.GetByID(ctx, id)
+	if err != nil {goCover_038a240e8706__46[5] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__46[4] = 1;return s.getBookingWithSeats(ctx, booking.ID)
+}
+
+func (s *BookingService) GetUserBookings(ctx context.Context, userID uuid.UUID, page, limit int) ([]*model.BookingResponse, int, error) {goCover_038a240e8706__47[0] = 13 ; goCover_038a240e8706__47[1] = goCover_038a240e8706_P ; goCover_038a240e8706__47[2] = 47 ; goCover_038a240e8706__47[3] = 1;
+	if page < 1 {goCover_038a240e8706__47[9] = 1;
+		page = 1
+	}
+	goCover_038a240e8706__47[4] = 1;if limit < 1 || limit > 100 {goCover_038a240e8706__47[10] = 1;
+		limit = 20
+	}
+
+	goCover_038a240e8706__47[5] = 1;offset := (page - 1) * limit
+
+	bookings, err := s.bookingRepo.GetByUser(ctx, userID, limit, offset)
+	if err != nil {goCover_038a240e8706__47[11] = 1;
+		return nil, 0, err
+	}
+
+	goCover_038a240e8706__47[6] = 1;total, err := s.bookingRepo.CountByUser(ctx, userID)
+	if err != nil {goCover_038a240e8706__47[12] = 1;
+		return nil, 0, err
+	}
+
+	goCover_038a240e8706__47[7] = 1;responses := make([]*model.BookingResponse, 0, len(bookings))
+	for _, booking := range bookings {goCover_038a240e8706__47[13] = 1;
+		response, err := s.getBookingWithSeats(ctx, booking.ID)
+		if err != nil {goCover_038a240e8706__47[15] = 1;
+			continue
+		}
+		goCover_038a240e8706__47[14] = 1;responses = append(responses, response)
+	}
+
+	goCover_038a240e8706__47[8] = 1;return responses, total, nil
+}
+
+func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID, userID uuid.UUID) error {goCover_038a240e8706__48[0] = 19 ; goCover_038a240e8706__48[1] = goCover_038a240e8706_P ; goCover_038a240e8706__48[2] = 48 ; goCover_038a240e8706__48[3] = 1;
+
+	booking, err := s.bookingRepo.GetByID(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__48[11] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__48[4] = 1;if booking.UserID != userID {goCover_038a240e8706__48[12] = 1;
+		return errors.New("unauthorized to cancel this booking")
+	}
+
+	goCover_038a240e8706__48[5] = 1;if booking.Status != model.BookingStatusPending && booking.Status != model.BookingStatusConfirmed {goCover_038a240e8706__48[13] = 1;
+		return ErrCannotCancel
+	}
+
+	goCover_038a240e8706__48[6] = 1;seats, err := s.bookingRepo.GetSeats(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__48[14] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__48[7] = 1;for _, bs := range seats {goCover_038a240e8706__48[15] = 1;
+		seat, err := s.seatRepo.GetByID(ctx, bs.SeatID)
+		if err != nil {goCover_038a240e8706__48[17] = 1;
+			continue
+		}
+		goCover_038a240e8706__48[16] = 1;seat.Status = model.SeatStatusAvailable
+		if err := s.seatRepo.Update(ctx, seat); err != nil {goCover_038a240e8706__48[18] = 1;
+			return err
+		}
+	}
+
+	goCover_038a240e8706__48[8] = 1;booking.Status = model.BookingStatusCancelled
+	if err := s.bookingRepo.Update(ctx, booking); err != nil {goCover_038a240e8706__48[19] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__48[9] = 1;event, err := s.eventRepo.GetByID(ctx, booking.EventID)
+	if err == nil {goCover_038a240e8706__48[20] = 1;
+		event.AvailableSeats += len(seats)
+		if err := s.eventRepo.Update(ctx, event); err != nil {goCover_038a240e8706__48[21] = 1;
+			return err
+		}
+	}
+
+	goCover_038a240e8706__48[10] = 1;return nil
+}
+
+func (s *BookingService) ConfirmBooking(ctx context.Context, bookingID uuid.UUID) error {goCover_038a240e8706__49[0] = 7 ; goCover_038a240e8706__49[1] = goCover_038a240e8706_P ; goCover_038a240e8706__49[2] = 49 ; goCover_038a240e8706__49[3] = 1;
+	booking, err := s.bookingRepo.GetByID(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__49[7] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__49[4] = 1;if booking.Status != model.BookingStatusPending {goCover_038a240e8706__49[8] = 1;
+		return errors.New("booking is not in pending status")
+	}
+
+	goCover_038a240e8706__49[5] = 1;if time.Now().After(booking.ExpiresAt) {goCover_038a240e8706__49[9] = 1;
+		return ErrBookingExpired
+	}
+
+	goCover_038a240e8706__49[6] = 1;now := time.Now()
+	booking.Status = model.BookingStatusConfirmed
+	booking.PaidAt = &now
+
+	return s.bookingRepo.Update(ctx, booking)
+}
+
+func (s *BookingService) getBookingWithSeats(ctx context.Context, bookingID uuid.UUID) (*model.BookingResponse, error) {goCover_038a240e8706__50[0] = 11 ; goCover_038a240e8706__50[1] = goCover_038a240e8706_P ; goCover_038a240e8706__50[2] = 50 ; goCover_038a240e8706__50[3] = 1;
+	booking, err := s.bookingRepo.GetByID(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__50[8] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__50[4] = 1;bookingSeats, err := s.bookingRepo.GetSeats(ctx, bookingID)
+	if err != nil {goCover_038a240e8706__50[9] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__50[5] = 1;seats := make([]model.SeatResponse, 0, len(bookingSeats))
+	for _, bs := range bookingSeats {goCover_038a240e8706__50[10] = 1;
+		seat, err := s.seatRepo.GetByID(ctx, bs.SeatID)
+		if err != nil {goCover_038a240e8706__50[12] = 1;
+			continue
+		}
+		goCover_038a240e8706__50[11] = 1;seats = append(seats, model.SeatResponse{
+			ID:         seat.ID,
+			EventID:    seat.EventID,
+			SeatNumber: seat.SeatNumber,
+			RowNumber:  seat.RowNumber,
+			Status:     seat.Status,
+			Price:      seat.Price,
+		})
+	}
+
+	goCover_038a240e8706__50[6] = 1;event, err := s.eventRepo.GetByID(ctx, booking.EventID)
+	eventTitle := ""
+	if err == nil {goCover_038a240e8706__50[13] = 1;
+		eventTitle = event.Title
+	}
+
+	goCover_038a240e8706__50[7] = 1;return &model.BookingResponse{
+		ID:          booking.ID,
+		UserID:      booking.UserID,
+		EventID:     booking.EventID,
+		EventTitle:  eventTitle,
+		TotalAmount: booking.TotalAmount,
+		Discount:    booking.Discount,
+		FinalAmount: booking.FinalAmount,
+		Status:      booking.Status,
+		ExpiresAt:   booking.ExpiresAt,
+		PaidAt:      booking.PaidAt,
+		Seats:       seats,
+		CreatedAt:   booking.CreatedAt,
+	}, nil
+}
+
+func (s *BookingService) ExpirePendingBookings(ctx context.Context) (int, error) {goCover_038a240e8706__51[0] = 18 ; goCover_038a240e8706__51[1] = goCover_038a240e8706_P ; goCover_038a240e8706__51[2] = 51 ; goCover_038a240e8706__51[3] = 1;
+	expiredBookings, err := s.bookingRepo.GetExpiredPending(ctx)
+	if err != nil {goCover_038a240e8706__51[6] = 1;
+		return 0, err
+	}
+
+	goCover_038a240e8706__51[4] = 1;count := 0
+	for _, booking := range expiredBookings {goCover_038a240e8706__51[7] = 1;
+
+		seats, err := s.bookingRepo.GetSeats(ctx, booking.ID)
+		if err != nil {goCover_038a240e8706__51[12] = 1;
+			continue
+		}
+
+		goCover_038a240e8706__51[8] = 1;for _, bs := range seats {goCover_038a240e8706__51[13] = 1;
+			seat, err := s.seatRepo.GetByID(ctx, bs.SeatID)
+			if err != nil {goCover_038a240e8706__51[15] = 1;
+				continue
+			}
+			goCover_038a240e8706__51[14] = 1;if seat.Status == model.SeatStatusReserved {goCover_038a240e8706__51[16] = 1;
+				seat.Status = model.SeatStatusAvailable
+				if err := s.seatRepo.Update(ctx, seat); err != nil {goCover_038a240e8706__51[17] = 1;
+					return count, err
+				}
+			}
+		}
+
+		goCover_038a240e8706__51[9] = 1;booking.Status = model.BookingStatusExpired
+		if err := s.bookingRepo.Update(ctx, booking); err != nil {goCover_038a240e8706__51[18] = 1;
+			return count, err
+		}
+
+		goCover_038a240e8706__51[10] = 1;event, err := s.eventRepo.GetByID(ctx, booking.EventID)
+		if err == nil {goCover_038a240e8706__51[19] = 1;
+			event.AvailableSeats += len(seats)
+			if err := s.eventRepo.Update(ctx, event); err != nil {goCover_038a240e8706__51[20] = 1;
+				return count, err
+			}
+		}
+
+		goCover_038a240e8706__51[11] = 1;count++
+	}
+
+	goCover_038a240e8706__51[5] = 1;return count, nil
+}

@@ -1,0 +1,125 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\service\admin_user_service.go:1:1
+package service
+
+import (
+	"context"
+	"errors"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrCannotModifyAdmin   = errors.New("cannot modify admin user")
+	ErrCannotBlockYourself = errors.New("cannot block yourself")
+)
+
+type AdminUserService struct {
+	userRepo repository.AdminUserRepositoryInterface
+}
+
+func NewAdminUserService(userRepo repository.AdminUserRepositoryInterface) *AdminUserService {goCover_038a240e8706__26[0] = 1 ; goCover_038a240e8706__26[1] = goCover_038a240e8706_P ; goCover_038a240e8706__26[2] = 26 ; goCover_038a240e8706__26[3] = 1;
+	return &AdminUserService{userRepo: userRepo}
+}
+
+func (s *AdminUserService) GetAllUsers(ctx context.Context, page, limit int, status, role string) ([]*model.User, int, error) {goCover_038a240e8706__27[0] = 1 ; goCover_038a240e8706__27[1] = goCover_038a240e8706_P ; goCover_038a240e8706__27[2] = 27 ; goCover_038a240e8706__27[3] = 1;
+	return s.userRepo.GetAllUsers(ctx, page, limit, status, role)
+}
+
+func (s *AdminUserService) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {goCover_038a240e8706__28[0] = 3 ; goCover_038a240e8706__28[1] = goCover_038a240e8706_P ; goCover_038a240e8706__28[2] = 28 ; goCover_038a240e8706__28[3] = 1;
+	user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {goCover_038a240e8706__28[5] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__28[4] = 1;user.PasswordHash = ""
+
+	return user, nil
+}
+
+func (s *AdminUserService) GetUserDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {goCover_038a240e8706__29[0] = 3 ; goCover_038a240e8706__29[1] = goCover_038a240e8706_P ; goCover_038a240e8706__29[2] = 29 ; goCover_038a240e8706__29[3] = 1;
+	user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {goCover_038a240e8706__29[5] = 1;
+		return nil, err
+	}
+
+	goCover_038a240e8706__29[4] = 1;bookingsCount, _ := s.userRepo.GetUserBookingsCount(ctx, id)
+	spentAmount, _ := s.userRepo.GetUserSpentAmount(ctx, id)
+
+	detail := map[string]interface{}{
+		"user": map[string]interface{}{
+			"id":             user.ID,
+			"email":          user.Email,
+			"name":           user.Name,
+			"role":           user.Role,
+			"status":         user.Status,
+			"email_verified": user.EmailVerified,
+			"created_at":     user.CreatedAt,
+			"updated_at":     user.UpdatedAt,
+		},
+		"statistics": map[string]interface{}{
+			"total_bookings": bookingsCount,
+			"total_spent":    spentAmount,
+		},
+	}
+
+	return detail, nil
+}
+
+func (s *AdminUserService) UpdateUserRole(ctx context.Context, id uuid.UUID, role model.Role, adminID uuid.UUID) error {goCover_038a240e8706__30[0] = 5 ; goCover_038a240e8706__30[1] = goCover_038a240e8706_P ; goCover_038a240e8706__30[2] = 30 ; goCover_038a240e8706__30[3] = 1;
+
+	user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {goCover_038a240e8706__30[6] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__30[4] = 1;if user.Role == model.RoleAdmin && id != adminID {goCover_038a240e8706__30[7] = 1;
+		return ErrCannotModifyAdmin
+	}
+
+	goCover_038a240e8706__30[5] = 1;return s.userRepo.UpdateUserRole(ctx, id, role)
+}
+
+func (s *AdminUserService) BlockUser(ctx context.Context, id uuid.UUID, adminID uuid.UUID) error {goCover_038a240e8706__31[0] = 7 ; goCover_038a240e8706__31[1] = goCover_038a240e8706_P ; goCover_038a240e8706__31[2] = 31 ; goCover_038a240e8706__31[3] = 1;
+
+	if id == adminID {goCover_038a240e8706__31[7] = 1;
+		return ErrCannotBlockYourself
+	}
+
+	goCover_038a240e8706__31[4] = 1;user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {goCover_038a240e8706__31[8] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__31[5] = 1;if user.Role == model.RoleAdmin {goCover_038a240e8706__31[9] = 1;
+		return ErrCannotModifyAdmin
+	}
+
+	goCover_038a240e8706__31[6] = 1;return s.userRepo.UpdateUserStatus(ctx, id, model.StatusBlocked)
+}
+
+func (s *AdminUserService) UnblockUser(ctx context.Context, id uuid.UUID) error {goCover_038a240e8706__32[0] = 1 ; goCover_038a240e8706__32[1] = goCover_038a240e8706_P ; goCover_038a240e8706__32[2] = 32 ; goCover_038a240e8706__32[3] = 1;
+	return s.userRepo.UpdateUserStatus(ctx, id, model.StatusActive)
+}
+
+func (s *AdminUserService) GetUserStats(ctx context.Context) (map[string]int64, error) {goCover_038a240e8706__33[0] = 1 ; goCover_038a240e8706__33[1] = goCover_038a240e8706_P ; goCover_038a240e8706__33[2] = 33 ; goCover_038a240e8706__33[3] = 1;
+	return s.userRepo.GetUserStats(ctx)
+}
+
+func (s *AdminUserService) DeleteUser(ctx context.Context, id uuid.UUID, adminID uuid.UUID) error {goCover_038a240e8706__34[0] = 7 ; goCover_038a240e8706__34[1] = goCover_038a240e8706_P ; goCover_038a240e8706__34[2] = 34 ; goCover_038a240e8706__34[3] = 1;
+	if id == adminID {goCover_038a240e8706__34[7] = 1;
+		return ErrCannotBlockYourself
+	}
+
+	goCover_038a240e8706__34[4] = 1;user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {goCover_038a240e8706__34[8] = 1;
+		return err
+	}
+
+	goCover_038a240e8706__34[5] = 1;if user.Role == model.RoleAdmin {goCover_038a240e8706__34[9] = 1;
+		return ErrCannotModifyAdmin
+	}
+
+	goCover_038a240e8706__34[6] = 1;return s.userRepo.UpdateUserStatus(ctx, id, model.StatusBlocked)
+}

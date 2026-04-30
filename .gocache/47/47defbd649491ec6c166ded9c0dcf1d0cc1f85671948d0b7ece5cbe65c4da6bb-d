@@ -1,0 +1,178 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\handler\admin_promocode_handler.go:1:1
+package handler
+
+import (
+	"encoding/csv"
+	"net/http"
+	"strconv"
+
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
+	"github.com/bekzat-kamen/booking_system_api/internal/repository"
+	"github.com/bekzat-kamen/booking_system_api/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type AdminPromocodeHandler struct {
+	adminPromocodeService service.AdminPromocodeServiceInterface
+}
+
+func NewAdminPromocodeHandler(adminPromocodeService service.AdminPromocodeServiceInterface) *AdminPromocodeHandler {goCover_fb525f7f7f88__14[0] = 1 ; goCover_fb525f7f7f88__14[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__14[2] = 14 ; goCover_fb525f7f7f88__14[3] = 1;
+	return &AdminPromocodeHandler{adminPromocodeService: adminPromocodeService}
+}
+
+func (h *AdminPromocodeHandler) GetAllPromocodes(c *gin.Context) {goCover_fb525f7f7f88__15[0] = 3 ; goCover_fb525f7f7f88__15[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__15[2] = 15 ; goCover_fb525f7f7f88__15[3] = 1;
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	isActive := c.Query("is_active")
+
+	promocodes, total, err := h.adminPromocodeService.GetAllPromocodes(c.Request.Context(), page, limit, isActive)
+	if err != nil {goCover_fb525f7f7f88__15[5] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get promocodes"})
+		return
+	}
+
+	goCover_fb525f7f7f88__15[4] = 1;c.JSON(http.StatusOK, gin.H{
+		"promocodes": promocodes,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
+}
+
+func (h *AdminPromocodeHandler) GetPromocodeDetail(c *gin.Context) {goCover_fb525f7f7f88__16[0] = 7 ; goCover_fb525f7f7f88__16[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__16[2] = 16 ; goCover_fb525f7f7f88__16[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__16[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid promocode id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__16[4] = 1;detail, err := h.adminPromocodeService.GetPromocodeDetail(c.Request.Context(), id)
+	if err != nil {goCover_fb525f7f7f88__16[7] = 1;
+		if err == repository.ErrPromocodeNotFound {goCover_fb525f7f7f88__16[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "promocode not found"})
+			return
+		}
+		goCover_fb525f7f7f88__16[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get promocode"})
+		return
+	}
+
+	goCover_fb525f7f7f88__16[5] = 1;c.JSON(http.StatusOK, detail)
+}
+
+func (h *AdminPromocodeHandler) UpdatePromocode(c *gin.Context) {goCover_fb525f7f7f88__17[0] = 11 ; goCover_fb525f7f7f88__17[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__17[2] = 17 ; goCover_fb525f7f7f88__17[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__17[7] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid promocode id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__17[4] = 1;var req model.UpdatePromocodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {goCover_fb525f7f7f88__17[8] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	goCover_fb525f7f7f88__17[5] = 1;promocode, err := h.adminPromocodeService.UpdatePromocode(c.Request.Context(), id, &req)
+	if err != nil {goCover_fb525f7f7f88__17[9] = 1;
+		if err == repository.ErrPromocodeNotFound {goCover_fb525f7f7f88__17[12] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "promocode not found"})
+			return
+		}
+		goCover_fb525f7f7f88__17[10] = 1;if err == service.ErrInvalidDiscountValue {goCover_fb525f7f7f88__17[13] = 1;
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		goCover_fb525f7f7f88__17[11] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update promocode"})
+		return
+	}
+
+	goCover_fb525f7f7f88__17[6] = 1;c.JSON(http.StatusOK, promocode)
+}
+
+func (h *AdminPromocodeHandler) DeletePromocode(c *gin.Context) {goCover_fb525f7f7f88__18[0] = 7 ; goCover_fb525f7f7f88__18[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__18[2] = 18 ; goCover_fb525f7f7f88__18[3] = 1;
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {goCover_fb525f7f7f88__18[6] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid promocode id"})
+		return
+	}
+
+	goCover_fb525f7f7f88__18[4] = 1;err = h.adminPromocodeService.DeletePromocode(c.Request.Context(), id)
+	if err != nil {goCover_fb525f7f7f88__18[7] = 1;
+		if err == repository.ErrPromocodeNotFound {goCover_fb525f7f7f88__18[9] = 1;
+			c.JSON(http.StatusNotFound, gin.H{"error": "promocode not found"})
+			return
+		}
+		goCover_fb525f7f7f88__18[8] = 1;c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete promocode"})
+		return
+	}
+
+	goCover_fb525f7f7f88__18[5] = 1;c.JSON(http.StatusOK, gin.H{"message": "promocode deleted successfully"})
+}
+
+func (h *AdminPromocodeHandler) BulkDeactivate(c *gin.Context) {goCover_fb525f7f7f88__19[0] = 9 ; goCover_fb525f7f7f88__19[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__19[2] = 19 ; goCover_fb525f7f7f88__19[3] = 1;
+	var req struct {
+		Ids []string `json:"ids" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {goCover_fb525f7f7f88__19[7] = 1;
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	goCover_fb525f7f7f88__19[4] = 1;ids := make([]uuid.UUID, 0, len(req.Ids))
+	for _, idStr := range req.Ids {goCover_fb525f7f7f88__19[8] = 1;
+		id, err := uuid.Parse(idStr)
+		if err != nil {goCover_fb525f7f7f88__19[10] = 1;
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid uuid: " + idStr})
+			return
+		}
+		goCover_fb525f7f7f88__19[9] = 1;ids = append(ids, id)
+	}
+
+	goCover_fb525f7f7f88__19[5] = 1;err := h.adminPromocodeService.BulkDeactivate(c.Request.Context(), ids)
+	if err != nil {goCover_fb525f7f7f88__19[11] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to deactivate promocodes"})
+		return
+	}
+
+	goCover_fb525f7f7f88__19[6] = 1;c.JSON(http.StatusOK, gin.H{"message": "promocodes deactivated successfully"})
+}
+
+func (h *AdminPromocodeHandler) GetPromocodesStats(c *gin.Context) {goCover_fb525f7f7f88__20[0] = 3 ; goCover_fb525f7f7f88__20[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__20[2] = 20 ; goCover_fb525f7f7f88__20[3] = 1;
+	stats, err := h.adminPromocodeService.GetPromocodesStats(c.Request.Context())
+	if err != nil {goCover_fb525f7f7f88__20[5] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get stats"})
+		return
+	}
+
+	goCover_fb525f7f7f88__20[4] = 1;c.JSON(http.StatusOK, stats)
+}
+
+func (h *AdminPromocodeHandler) ExportPromocodes(c *gin.Context) {goCover_fb525f7f7f88__21[0] = 7 ; goCover_fb525f7f7f88__21[1] = goCover_fb525f7f7f88_P ; goCover_fb525f7f7f88__21[2] = 21 ; goCover_fb525f7f7f88__21[3] = 1;
+	rows, err := h.adminPromocodeService.ExportPromocodesToCSV(c.Request.Context())
+	if err != nil {goCover_fb525f7f7f88__21[6] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to export promocodes"})
+		return
+	}
+
+	goCover_fb525f7f7f88__21[4] = 1;c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment; filename=promocodes_export.csv")
+
+	w := csv.NewWriter(c.Writer)
+	defer w.Flush()
+
+	for _, row := range rows {goCover_fb525f7f7f88__21[7] = 1;
+		if err := w.Write(row); err != nil {goCover_fb525f7f7f88__21[8] = 1;
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write csv"})
+			return
+		}
+	}
+
+	goCover_fb525f7f7f88__21[5] = 1;if err := w.Error(); err != nil {goCover_fb525f7f7f88__21[9] = 1;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to finalize csv"})
+		return
+	}
+}

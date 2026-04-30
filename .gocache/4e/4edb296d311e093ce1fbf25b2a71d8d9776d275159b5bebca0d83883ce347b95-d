@@ -1,0 +1,131 @@
+//line C:\Users\admin\GolandProjects\booking_system_api\internal\middleware\ratelimit.go:1:1
+package middleware
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+)
+
+var ctx = context.Background()
+
+// RateLimitConfig конфигурация лимитов
+type RateLimitConfig struct {
+	Requests  int           // Максимум запросов
+	Window    time.Duration // Окно времени
+	Whitelist []string      // IP без лимитов (опционально)
+}
+
+// DefaultRateLimitConfig конфигурация по умолчанию
+var DefaultRateLimitConfig = RateLimitConfig{
+	Requests:  100,         // 100 запросов
+	Window:    time.Minute, // в минуту
+	Whitelist: []string{},
+}
+
+// RateLimitMiddleware создаёт middleware для ограничения запросов
+func RateLimitMiddleware(client *redis.Client, config RateLimitConfig) gin.HandlerFunc {goCover_f3d6058470ad__3[0] = 13 ; goCover_f3d6058470ad__3[1] = goCover_f3d6058470ad_P ; goCover_f3d6058470ad__3[2] = 3 ; goCover_f3d6058470ad__3[3] = 1;
+	return func(c *gin.Context) {goCover_f3d6058470ad__3[4] = 1;
+		// Получаем IP клиента
+		ip := c.ClientIP()
+
+		// Проверяем whitelist
+		for _, whitelistIP := range config.Whitelist {goCover_f3d6058470ad__3[10] = 1;
+			if ip == whitelistIP {goCover_f3d6058470ad__3[11] = 1;
+				c.Next()
+				return
+			}
+		}
+
+		// Ключ для Redis
+		goCover_f3d6058470ad__3[5] = 1;key := "ratelimit:" + ip
+
+		// Получаем текущее счётчик
+		count, err := client.Get(ctx, key).Int()
+		if err != nil && err != redis.Nil {goCover_f3d6058470ad__3[12] = 1;
+			// Ошибка Redis — пропускаем запрос (fail-open)
+			c.Next()
+			return
+		}
+
+		// Если ключа нет — создаём
+		goCover_f3d6058470ad__3[6] = 1;if err == redis.Nil {goCover_f3d6058470ad__3[13] = 1;
+			client.Set(ctx, key, 1, config.Window)
+			c.Next()
+			return
+		}
+
+		// Проверяем лимит
+		goCover_f3d6058470ad__3[7] = 1;if count >= config.Requests {goCover_f3d6058470ad__3[14] = 1;
+			// Возвращаем заголовки о лимитах
+			c.Header("X-RateLimit-Limit", string(rune(config.Requests)))
+			c.Header("X-RateLimit-Remaining", "0")
+			c.Header("X-RateLimit-Reset", time.Now().Add(config.Window).Format(time.RFC3339))
+
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "too many requests",
+				"message":     "rate limit exceeded, please try again later",
+				"retry_after": config.Window.Seconds(),
+			})
+			c.Abort()
+			return
+		}
+
+		// Увеличиваем счётчик
+		goCover_f3d6058470ad__3[8] = 1;client.Incr(ctx, key)
+
+		// Устанавливаем время жизни, если ключ новый
+		ttl, _ := client.TTL(ctx, key).Result()
+		if ttl <= 0 {goCover_f3d6058470ad__3[15] = 1;
+			client.Expire(ctx, key, config.Window)
+		}
+
+		// Возвращаем заголовки о лимитах
+		goCover_f3d6058470ad__3[9] = 1;c.Header("X-RateLimit-Limit", string(rune(config.Requests)))
+		c.Header("X-RateLimit-Remaining", string(rune(config.Requests-count-1)))
+		c.Header("X-RateLimit-Reset", time.Now().Add(config.Window).Format(time.RFC3339))
+
+		c.Next()
+	}
+}
+
+// PerRouteRateLimitMiddleware для разных лимитов на разные роуты
+func PerRouteRateLimitMiddleware(client *redis.Client, prefix string, config RateLimitConfig) gin.HandlerFunc {goCover_f3d6058470ad__4[0] = 10 ; goCover_f3d6058470ad__4[1] = goCover_f3d6058470ad_P ; goCover_f3d6058470ad__4[2] = 4 ; goCover_f3d6058470ad__4[3] = 1;
+	return func(c *gin.Context) {goCover_f3d6058470ad__4[4] = 1;
+		ip := c.ClientIP()
+		key := "ratelimit:" + prefix + ":" + ip
+
+		count, err := client.Get(ctx, key).Int()
+		if err != nil && err != redis.Nil {goCover_f3d6058470ad__4[9] = 1;
+			c.Next()
+			return
+		}
+
+		goCover_f3d6058470ad__4[5] = 1;if err == redis.Nil {goCover_f3d6058470ad__4[10] = 1;
+			client.Set(ctx, key, 1, config.Window)
+			c.Next()
+			return
+		}
+
+		goCover_f3d6058470ad__4[6] = 1;if count >= config.Requests {goCover_f3d6058470ad__4[11] = 1;
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "too many requests",
+				"message":     "rate limit exceeded for this endpoint",
+				"retry_after": config.Window.Seconds(),
+			})
+			c.Abort()
+			return
+		}
+
+		goCover_f3d6058470ad__4[7] = 1;client.Incr(ctx, key)
+		ttl, _ := client.TTL(ctx, key).Result()
+		if ttl <= 0 {goCover_f3d6058470ad__4[12] = 1;
+			client.Expire(ctx, key, config.Window)
+		}
+
+		goCover_f3d6058470ad__4[8] = 1;c.Next()
+	}
+}
