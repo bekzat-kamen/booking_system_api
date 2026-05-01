@@ -1,0 +1,9 @@
+.git
+.idea
+vendor
+coverage
+*.test
+*.out
+.env
+Dockerfile
+docker-compose.yml

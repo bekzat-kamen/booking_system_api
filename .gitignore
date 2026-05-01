@@ -1,18 +1,40 @@
-# Go
+# Бинарные файлы и исполняемые файлы
 bin/
-vendor/
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Тесты и покрытие
 *.test
 *.out
+coverage
+coverage.txt
 
-# IDE
+# Зависимости
+vendor/
+
+# IDE и редакторы
 .idea/
+.vscode/
 *.iml
+*.swp
+*.swo
 
-# Env
+# Файлы окружения
 .env
 .env.local
+.env.*.local
 
-# Logs
+# Логи
 logs/
 *.log
+
+# Кэш Go
+.gocache/
+.cache/
+go-build/
+
+# Docker
+postgres_data/

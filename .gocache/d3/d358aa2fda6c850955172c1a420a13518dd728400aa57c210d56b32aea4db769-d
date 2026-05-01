@@ -1,6 +1,0 @@
-covervars.go
-admin.cover.go
-auth.cover.go
-ratelimit.cover.go
-./admin_test.go
-./auth_test.go

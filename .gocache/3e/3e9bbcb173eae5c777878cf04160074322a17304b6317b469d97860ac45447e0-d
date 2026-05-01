@@ -1,5 +1,0 @@
-./admin.go
-./auth.go
-./ratelimit.go
-./admin_test.go
-./auth_test.go
