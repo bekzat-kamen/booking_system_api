@@ -245,4 +245,3 @@ func TestBookingHandlerConfirmBookingSuccess(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 }
-

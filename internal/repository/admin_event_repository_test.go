@@ -19,7 +19,9 @@ func setupAdminEventMock(t *testing.T) (*AdminEventRepository, sqlmock.Sqlmock, 
 	repo := NewAdminEventRepository(sqlxDB)
 
 	return repo, mock, func() {
-		_ = db.Close()
+		mock.ExpectClose()
+		err := db.Close()
+		require.NoError(t, err)
 	}
 }
 
@@ -130,4 +132,3 @@ func TestAdminEventRepository_GetEventsByStatus(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(20), stats["total"])
 }
-

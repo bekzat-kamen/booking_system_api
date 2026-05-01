@@ -205,4 +205,3 @@ func TestBookingRepository_GetExpiredPending(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, bookings, 1)
 }
-

@@ -154,4 +154,3 @@ func TestAdminUserRepository_GetUserBookingsCount(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(5), count)
 }
-

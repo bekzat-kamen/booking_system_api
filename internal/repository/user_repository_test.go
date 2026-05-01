@@ -188,4 +188,3 @@ func TestUserRepository_Delete(t *testing.T) {
 	err := repo.Delete(context.Background(), userID)
 	assert.NoError(t, err)
 }
-

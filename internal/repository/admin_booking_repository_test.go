@@ -20,7 +20,9 @@ func setupAdminBookingMock(t *testing.T) (*AdminBookingRepository, sqlmock.Sqlmo
 	repo := NewAdminBookingRepository(sqlxDB)
 
 	return repo, mock, func() {
-		_ = db.Close()
+		mock.ExpectClose()
+		err := db.Close()
+		require.NoError(t, err)
 	}
 }
 
@@ -169,4 +171,3 @@ func TestAdminBookingRepository_GetRevenueStats(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1000.0, stats["total_revenue"])
 }
-

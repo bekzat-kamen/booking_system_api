@@ -19,7 +19,9 @@ func setupAdminPromocodeMock(t *testing.T) (*AdminPromocodeRepository, sqlmock.S
 	repo := NewAdminPromocodeRepository(sqlxDB)
 
 	return repo, mock, func() {
-		_ = db.Close()
+		mock.ExpectClose()
+		err := db.Close()
+		require.NoError(t, err)
 	}
 }
 
