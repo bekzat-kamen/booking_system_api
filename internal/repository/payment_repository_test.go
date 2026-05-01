@@ -163,4 +163,3 @@ func TestPaymentRepository_SetProviderResponse(t *testing.T) {
 	err := repo.SetProviderResponse(context.Background(), paymentID, resp)
 	assert.NoError(t, err)
 }
-

@@ -184,4 +184,3 @@ func TestEventRepository_GetByOrganizer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, events, 1)
 }
-

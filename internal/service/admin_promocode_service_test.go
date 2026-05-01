@@ -178,4 +178,3 @@ func TestAdminPromocodeServiceBulkDeactivateSuccess(t *testing.T) {
 	err := svc.BulkDeactivate(ctx, ids)
 	assert.NoError(t, err)
 }
-

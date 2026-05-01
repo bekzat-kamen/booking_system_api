@@ -424,4 +424,3 @@ func TestAuthServiceDeactivateProfile(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
-

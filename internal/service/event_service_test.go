@@ -186,4 +186,3 @@ func TestEventServiceDelete(t *testing.T) {
 	err := svc.Delete(ctx, eventID, ownerID)
 	assert.NoError(t, err)
 }
-

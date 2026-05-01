@@ -211,4 +211,3 @@ func TestEventHandlerDeleteSuccess(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "deleted successfully")
 }
-
