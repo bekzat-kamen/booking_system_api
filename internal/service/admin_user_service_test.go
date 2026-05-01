@@ -107,3 +107,86 @@ func TestAdminUserServiceDeleteUserSuccess(t *testing.T) {
 	require.NoError(t, err)
 	repo.AssertExpectations(t)
 }
+
+func TestAdminUserServiceGetAllUsers(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+
+	repo.On("GetAllUsers", ctx, 1, 10, "active", "user").Return([]*model.User{{ID: uuid.New()}}, 1, nil).Once()
+
+	users, total, err := svc.GetAllUsers(ctx, 1, 10, "active", "user")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, users, 1)
+}
+
+func TestAdminUserServiceGetUserDetail(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+	userID := uuid.New()
+
+	repo.On("GetUserByID", ctx, userID).Return(&model.User{ID: userID, Email: "test@test.com"}, nil).Once()
+	repo.On("GetUserBookingsCount", ctx, userID).Return(int64(5), nil).Once()
+	repo.On("GetUserSpentAmount", ctx, userID).Return(150.0, nil).Once()
+
+	detail, err := svc.GetUserDetail(ctx, userID)
+	assert.NoError(t, err)
+	stats := detail["statistics"].(map[string]interface{})
+	assert.Equal(t, int64(5), stats["total_bookings"])
+	assert.Equal(t, 150.0, stats["total_spent"])
+}
+
+func TestAdminUserServiceUpdateUserRoleSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+	userID := uuid.New()
+	adminID := uuid.New()
+
+	repo.On("GetUserByID", ctx, userID).Return(&model.User{ID: userID, Role: model.RoleUser}, nil).Once()
+	repo.On("UpdateUserRole", ctx, userID, model.RoleOrganizer).Return(nil).Once()
+
+	err := svc.UpdateUserRole(ctx, userID, model.RoleOrganizer, adminID)
+	assert.NoError(t, err)
+}
+
+func TestAdminUserServiceBlockUserSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+	userID := uuid.New()
+	adminID := uuid.New()
+
+	repo.On("GetUserByID", ctx, userID).Return(&model.User{ID: userID, Role: model.RoleUser}, nil).Once()
+	repo.On("UpdateUserStatus", ctx, userID, model.StatusBlocked).Return(nil).Once()
+
+	err := svc.BlockUser(ctx, userID, adminID)
+	assert.NoError(t, err)
+}
+
+func TestAdminUserServiceGetUserStats(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+
+	stats := map[string]int64{"total": 100}
+	repo.On("GetUserStats", ctx).Return(stats, nil).Once()
+
+	res, err := svc.GetUserStats(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(100), res["total"])
+}
+func TestAdminUserServiceUnblockUserSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminUserRepositoryMock)
+	svc := NewAdminUserService(repo)
+	userID := uuid.New()
+
+	repo.On("UpdateUserStatus", ctx, userID, model.StatusActive).Return(nil).Once()
+
+	err := svc.UnblockUser(ctx, userID)
+	assert.NoError(t, err)
+	repo.AssertExpectations(t)
+}

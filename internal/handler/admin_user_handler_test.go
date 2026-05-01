@@ -128,3 +128,72 @@ func TestAdminUserHandlerGetUserStatsSuccess(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "\"total\":10")
 }
+
+func TestAdminUserHandlerGetUserDetailSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(adminUserServiceMock)
+	h := NewAdminUserHandler(svc)
+	router := gin.New()
+	router.GET("/admin/users/:id", h.GetUserDetail)
+
+	userID := uuid.New()
+	svc.On("GetUserDetail", mock.Anything, userID).Return(map[string]interface{}{"user": map[string]interface{}{"email": "test@test.com"}}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodGet, "/admin/users/"+userID.String(), nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "test@test.com")
+}
+
+func TestAdminUserHandlerUpdateUserRoleSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(adminUserServiceMock)
+	h := NewAdminUserHandler(svc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.PATCH("/admin/users/:id/role", h.UpdateUserRole)
+
+	adminID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	userID := uuid.New()
+	svc.On("UpdateUserRole", mock.Anything, userID, model.RoleOrganizer, adminID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPatch, "/admin/users/"+userID.String()+"/role", map[string]string{
+		"role": "organizer",
+	})
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "role updated successfully")
+}
+
+func TestAdminUserHandlerBlockUserSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(adminUserServiceMock)
+	h := NewAdminUserHandler(svc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.POST("/admin/users/:id/block", h.BlockUser)
+
+	adminID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	userID := uuid.New()
+	svc.On("BlockUser", mock.Anything, userID, adminID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/admin/users/"+userID.String()+"/block", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAdminUserHandlerUnblockUserSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(adminUserServiceMock)
+	h := NewAdminUserHandler(svc)
+	router := gin.New()
+	router.POST("/admin/users/:id/unblock", h.UnblockUser)
+
+	userID := uuid.New()
+	svc.On("UnblockUser", mock.Anything, userID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/admin/users/"+userID.String()+"/unblock", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+

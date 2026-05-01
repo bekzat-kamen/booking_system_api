@@ -192,3 +192,57 @@ func TestBookingHandlerCreateBookingNotFound(t *testing.T) {
 	assert.Contains(t, w.Body.String(), repository.ErrSeatNotFound.Error())
 	bookingSvc.AssertExpectations(t)
 }
+
+func TestBookingHandlerGetBookingSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	bookingSvc := new(bookingServiceMock)
+	h := NewBookingHandler(bookingSvc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.GET("/bookings/:id", h.GetBooking)
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	bookingID := uuid.New()
+	bookingSvc.On("GetBooking", mock.Anything, bookingID).Return(&model.BookingResponse{
+		ID:     bookingID,
+		UserID: userID,
+	}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodGet, "/bookings/"+bookingID.String(), nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), bookingID.String())
+}
+
+func TestBookingHandlerCancelBookingSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	bookingSvc := new(bookingServiceMock)
+	h := NewBookingHandler(bookingSvc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.POST("/bookings/:id/cancel", h.CancelBooking)
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	bookingID := uuid.New()
+	bookingSvc.On("CancelBooking", mock.Anything, bookingID, userID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/bookings/"+bookingID.String()+"/cancel", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestBookingHandlerConfirmBookingSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	bookingSvc := new(bookingServiceMock)
+	h := NewBookingHandler(bookingSvc)
+	router := gin.New()
+	router.POST("/bookings/:id/confirm", h.ConfirmBooking)
+
+	bookingID := uuid.New()
+	bookingSvc.On("ConfirmBooking", mock.Anything, bookingID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/bookings/"+bookingID.String()+"/confirm", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+

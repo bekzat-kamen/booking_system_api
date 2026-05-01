@@ -296,3 +296,105 @@ func TestBookingServiceConfirmBookingExpired(t *testing.T) {
 	bookingRepo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything)
 	bookingRepo.AssertExpectations(t)
 }
+
+func TestBookingServiceGetBooking(t *testing.T) {
+	ctx := context.Background()
+	bookingID := uuid.New()
+
+	bookingRepo := new(bookingRepositoryMock)
+	seatRepo := new(seatRepositoryMock)
+	eventRepo := new(eventRepositoryMock)
+	svc := NewBookingService(bookingRepo, seatRepo, eventRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		bookingRepo.On("GetByID", ctx, bookingID).Return(&model.Booking{ID: bookingID, EventID: uuid.New()}, nil).Twice()
+		eventRepo.On("GetByID", ctx, mock.Anything).Return(&model.Event{Title: "Concert"}, nil).Once()
+		bookingRepo.On("GetSeats", ctx, bookingID).Return([]*model.BookingSeat{}, nil).Once()
+
+		resp, err := svc.GetBooking(ctx, bookingID)
+		assert.NoError(t, err)
+		assert.Equal(t, bookingID, resp.ID)
+	})
+}
+
+func TestBookingServiceGetUserBookings(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	bookingID := uuid.New()
+
+	bookingRepo := new(bookingRepositoryMock)
+	seatRepo := new(seatRepositoryMock)
+	eventRepo := new(eventRepositoryMock)
+	svc := NewBookingService(bookingRepo, seatRepo, eventRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		bookingRepo.On("GetByUser", ctx, userID, 10, 0).Return([]*model.Booking{{ID: bookingID, EventID: uuid.New()}}, nil).Once()
+		bookingRepo.On("CountByUser", ctx, userID).Return(1, nil).Once()
+		bookingRepo.On("GetByID", ctx, bookingID).Return(&model.Booking{ID: bookingID, EventID: uuid.New()}, nil).Once()
+		bookingRepo.On("GetSeats", ctx, bookingID).Return([]*model.BookingSeat{}, nil).Once()
+		eventRepo.On("GetByID", ctx, mock.Anything).Return(&model.Event{Title: "Concert"}, nil).Once()
+
+		resp, total, err := svc.GetUserBookings(ctx, userID, 1, 10)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, total)
+		assert.Len(t, resp, 1)
+	})
+}
+
+func TestBookingServiceCancelBooking(t *testing.T) {
+	ctx := context.Background()
+	bookingID := uuid.New()
+	userID := uuid.New()
+	eventID := uuid.New()
+
+	bookingRepo := new(bookingRepositoryMock)
+	seatRepo := new(seatRepositoryMock)
+	eventRepo := new(eventRepositoryMock)
+	svc := NewBookingService(bookingRepo, seatRepo, eventRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		bookingRepo.On("GetByID", ctx, bookingID).Return(&model.Booking{
+			ID:      bookingID,
+			UserID:  userID,
+			Status:  model.BookingStatusPending,
+			EventID: eventID,
+		}, nil).Once()
+		bookingRepo.On("GetSeats", ctx, bookingID).Return([]*model.BookingSeat{{SeatID: uuid.New()}}, nil).Once()
+		bookingRepo.On("Update", ctx, mock.MatchedBy(func(b *model.Booking) bool {
+			return b.Status == model.BookingStatusCancelled
+		})).Return(nil).Once()
+		seatRepo.On("GetByID", ctx, mock.Anything).Return(&model.Seat{Status: model.SeatStatusReserved}, nil).Once()
+		seatRepo.On("Update", ctx, mock.Anything).Return(nil).Once()
+		eventRepo.On("GetByID", ctx, eventID).Return(&model.Event{AvailableSeats: 5}, nil).Once()
+		eventRepo.On("Update", ctx, mock.Anything).Return(nil).Once()
+
+		err := svc.CancelBooking(ctx, bookingID, userID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestBookingServiceExpirePendingBookings(t *testing.T) {
+	ctx := context.Background()
+
+	bookingRepo := new(bookingRepositoryMock)
+	seatRepo := new(seatRepositoryMock)
+	eventRepo := new(eventRepositoryMock)
+	svc := NewBookingService(bookingRepo, seatRepo, eventRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		bookingRepo.On("GetExpiredPending", ctx).Return([]*model.Booking{{ID: uuid.New(), UserID: uuid.New(), EventID: uuid.New()}}, nil).Once()
+		bookingRepo.On("GetSeats", ctx, mock.Anything).Return([]*model.BookingSeat{{SeatID: uuid.New()}}, nil).Once()
+		bookingRepo.On("Update", ctx, mock.MatchedBy(func(b *model.Booking) bool {
+			return b.Status == model.BookingStatusExpired
+		})).Return(nil).Once()
+		seatRepo.On("GetByID", ctx, mock.Anything).Return(&model.Seat{Status: model.SeatStatusReserved}, nil).Once()
+		seatRepo.On("Update", ctx, mock.Anything).Return(nil).Once()
+		eventRepo.On("GetByID", ctx, mock.Anything).Return(&model.Event{AvailableSeats: 5}, nil).Once()
+		eventRepo.On("Update", ctx, mock.Anything).Return(nil).Once()
+
+		count, err := svc.ExpirePendingBookings(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count)
+	})
+}
+

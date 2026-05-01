@@ -156,3 +156,59 @@ func TestEventHandlerPublishEventSuccess(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "published")
 }
+
+func TestEventHandlerGetByIDSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(eventServiceMock)
+	h := NewEventHandler(svc)
+	router := gin.New()
+	router.GET("/events/:id", h.GetByID)
+
+	eventID := uuid.New()
+	svc.On("GetByID", mock.Anything, eventID).Return(&model.Event{ID: eventID, Title: "Concert"}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodGet, "/events/"+eventID.String(), nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Concert")
+}
+
+func TestEventHandlerUpdateSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(eventServiceMock)
+	h := NewEventHandler(svc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.PUT("/events/:id", h.Update)
+
+	eventID := uuid.New()
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	reqBody := model.UpdateEventRequest{Title: "New Title"}
+
+	svc.On("Update", mock.Anything, eventID, userID, &reqBody).Return(&model.Event{ID: eventID, Title: "New Title"}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodPut, "/events/"+eventID.String(), reqBody)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "New Title")
+}
+
+func TestEventHandlerDeleteSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := new(eventServiceMock)
+	h := NewEventHandler(svc)
+	router := gin.New()
+	router.Use(addUserContext())
+	router.DELETE("/events/:id", h.Delete)
+
+	eventID := uuid.New()
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+
+	svc.On("Delete", mock.Anything, eventID, userID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodDelete, "/events/"+eventID.String(), nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "deleted successfully")
+}
+

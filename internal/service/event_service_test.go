@@ -132,3 +132,58 @@ func TestEventServicePublishEventSoldOut(t *testing.T) {
 	assert.Equal(t, model.EventStatusSoldOut, event.Status)
 	repo.AssertExpectations(t)
 }
+
+func TestEventServiceGetByID(t *testing.T) {
+	ctx := context.Background()
+	repo := new(eventRepositoryMock)
+	svc := NewEventService(repo)
+	eventID := uuid.New()
+
+	repo.On("GetByID", ctx, eventID).Return(&model.Event{ID: eventID}, nil).Once()
+
+	event, err := svc.GetByID(ctx, eventID)
+	assert.NoError(t, err)
+	assert.Equal(t, eventID, event.ID)
+}
+
+func TestEventServiceGetAll(t *testing.T) {
+	ctx := context.Background()
+	repo := new(eventRepositoryMock)
+	svc := NewEventService(repo)
+
+	repo.On("GetAll", ctx, 10, 0).Return([]*model.Event{{ID: uuid.New()}}, nil).Once()
+	repo.On("Count", ctx).Return(1, nil).Once()
+
+	events, total, err := svc.GetAll(ctx, 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, events, 1)
+}
+
+func TestEventServiceGetByOrganizer(t *testing.T) {
+	ctx := context.Background()
+	repo := new(eventRepositoryMock)
+	svc := NewEventService(repo)
+	organizerID := uuid.New()
+
+	repo.On("GetByOrganizer", ctx, organizerID, 10, 0).Return([]*model.Event{{ID: uuid.New()}}, nil).Once()
+
+	events, err := svc.GetByOrganizer(ctx, organizerID, 10, 0)
+	assert.NoError(t, err)
+	assert.Len(t, events, 1)
+}
+
+func TestEventServiceDelete(t *testing.T) {
+	ctx := context.Background()
+	repo := new(eventRepositoryMock)
+	svc := NewEventService(repo)
+	eventID := uuid.New()
+	ownerID := uuid.New()
+
+	repo.On("GetByID", ctx, eventID).Return(&model.Event{ID: eventID, CreatedBy: ownerID}, nil).Once()
+	repo.On("Delete", ctx, eventID).Return(nil).Once()
+
+	err := svc.Delete(ctx, eventID, ownerID)
+	assert.NoError(t, err)
+}
+

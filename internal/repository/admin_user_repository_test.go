@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/bekzat-kamen/booking_system_api/internal/model"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
@@ -90,3 +91,67 @@ func TestAdminUserRepository_GetUserSpentAmount(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 150.50, amount)
 }
+
+func TestAdminUserRepository_GetUserByID(t *testing.T) {
+	repo, mock, cleanup := setupAdminUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+
+	query := `
+		SELECT id, email, password_hash, name, role, status, email_verified, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`
+	mock.ExpectQuery(query).WithArgs(userID).WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userID))
+
+	user, err := repo.GetUserByID(context.Background(), userID)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, user.ID)
+}
+
+func TestAdminUserRepository_UpdateUserRole(t *testing.T) {
+	repo, mock, cleanup := setupAdminUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+	role := model.RoleAdmin
+
+	mock.ExpectExec("UPDATE users SET role = $1, updated_at = $2 WHERE id = $3").
+		WithArgs(role, sqlmock.AnyArg(), userID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.UpdateUserRole(context.Background(), userID, role)
+	assert.NoError(t, err)
+}
+
+func TestAdminUserRepository_UpdateUserStatus(t *testing.T) {
+	repo, mock, cleanup := setupAdminUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+	status := model.StatusBlocked
+
+	mock.ExpectExec("UPDATE users SET status = $1, updated_at = $2 WHERE id = $3").
+		WithArgs(status, sqlmock.AnyArg(), userID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.UpdateUserStatus(context.Background(), userID, status)
+	assert.NoError(t, err)
+}
+
+func TestAdminUserRepository_GetUserBookingsCount(t *testing.T) {
+	repo, mock, cleanup := setupAdminUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+
+	mock.ExpectQuery("SELECT COUNT(*) FROM bookings WHERE user_id = $1").
+		WithArgs(userID).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
+
+	count, err := repo.GetUserBookingsCount(context.Background(), userID)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(5), count)
+}
+

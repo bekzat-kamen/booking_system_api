@@ -125,3 +125,57 @@ func TestAdminPromocodeServiceExportPromocodesToCSVSuccess(t *testing.T) {
 	assert.Equal(t, "Code", rows[0][0])
 	assert.Equal(t, "SALE10", rows[1][0])
 }
+
+func TestAdminPromocodeServiceUpdatePromocodeSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminPromocodeRepositoryMock)
+	svc := NewAdminPromocodeService(repo)
+	id := uuid.New()
+
+	repo.On("GetPromocodeByID", ctx, id).Return(&model.Promocode{ID: id, Code: "TEST"}, nil).Once()
+	repo.On("Update", ctx, mock.MatchedBy(func(p *model.Promocode) bool {
+		return p.Description == "New Description"
+	})).Return(nil).Once()
+
+	resp, err := svc.UpdatePromocode(ctx, id, &model.UpdatePromocodeRequest{Description: "New Description"})
+	assert.NoError(t, err)
+	assert.Equal(t, "New Description", resp.Description)
+}
+
+func TestAdminPromocodeServiceDeletePromocode(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminPromocodeRepositoryMock)
+	svc := NewAdminPromocodeService(repo)
+	id := uuid.New()
+
+	repo.On("DeletePromocode", ctx, id).Return(nil).Once()
+
+	err := svc.DeletePromocode(ctx, id)
+	assert.NoError(t, err)
+}
+
+func TestAdminPromocodeServiceGetPromocodesStats(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminPromocodeRepositoryMock)
+	svc := NewAdminPromocodeService(repo)
+
+	stats := map[string]int64{"total": 50}
+	repo.On("GetPromocodesStats", ctx).Return(stats, nil).Once()
+
+	res, err := svc.GetPromocodesStats(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(50), res["total"])
+}
+
+func TestAdminPromocodeServiceBulkDeactivateSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(adminPromocodeRepositoryMock)
+	svc := NewAdminPromocodeService(repo)
+	ids := []uuid.UUID{uuid.New(), uuid.New()}
+
+	repo.On("BulkDeactivatePromocodes", ctx, ids).Return(nil).Once()
+
+	err := svc.BulkDeactivate(ctx, ids)
+	assert.NoError(t, err)
+}
+

@@ -377,3 +377,51 @@ func TestAuthServiceLoginTokenGenerationFailure(t *testing.T) {
 	userRepo.AssertExpectations(t)
 	tokenSvc.AssertExpectations(t)
 }
+
+func TestAuthServiceGetProfile(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	userRepo := new(userRepositoryMock)
+	tokenSvc := new(tokenServiceMock)
+	svc := NewAuthService(userRepo, tokenSvc)
+
+	t.Run("Success", func(t *testing.T) {
+		userRepo.On("GetByID", ctx, userID).Return(&model.User{
+			ID:    userID,
+			Email: "test@test.com",
+		}, nil).Once()
+
+		user, err := svc.GetProfile(ctx, userID)
+		assert.NoError(t, err)
+		assert.Equal(t, userID, user.ID)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		userRepo.On("GetByID", ctx, userID).Return((*model.User)(nil), repository.ErrUserNotFound).Once()
+
+		user, err := svc.GetProfile(ctx, userID)
+		assert.Error(t, err)
+		assert.Nil(t, user)
+	})
+}
+
+func TestAuthServiceDeactivateProfile(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	userRepo := new(userRepositoryMock)
+	tokenSvc := new(tokenServiceMock)
+	svc := NewAuthService(userRepo, tokenSvc)
+
+	t.Run("Success", func(t *testing.T) {
+		userRepo.On("GetByID", ctx, userID).Return(&model.User{ID: userID, Status: "active"}, nil).Once()
+		userRepo.On("Update", ctx, mock.MatchedBy(func(u *model.User) bool {
+			return u.Status == model.StatusBlocked
+		})).Return(nil).Once()
+
+		err := svc.DeactivateProfile(ctx, userID)
+		assert.NoError(t, err)
+	})
+}
+

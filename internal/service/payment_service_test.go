@@ -302,3 +302,24 @@ func TestPaymentServiceGetPaymentByBooking(t *testing.T) {
 
 	paymentRepo.AssertExpectations(t)
 }
+
+func TestPaymentServiceGetPaymentSuccess(t *testing.T) {
+	ctx := context.Background()
+	paymentID := uuid.New()
+	bookingID := uuid.New()
+
+	paymentRepo := new(paymentRepositoryMock)
+	svc := NewPaymentService(paymentRepo, new(bookingRepositoryMock), new(bookingServiceInterfaceMock))
+
+	paymentRepo.On("GetByID", ctx, paymentID).Return(&model.Payment{
+		ID:        paymentID,
+		BookingID: bookingID,
+		Amount:    150,
+		Status:    model.PaymentStatusPending,
+	}, nil).Once()
+
+	resp, err := svc.GetPayment(ctx, paymentID)
+	assert.NoError(t, err)
+	assert.Equal(t, paymentID, resp.ID)
+	assert.Equal(t, bookingID, resp.BookingID)
+}

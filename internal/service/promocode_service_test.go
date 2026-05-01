@@ -168,3 +168,57 @@ func TestPromocodeServiceDeactivatePromocodeSuccess(t *testing.T) {
 	assert.False(t, promocode.IsActive)
 	repo.AssertExpectations(t)
 }
+
+func TestPromocodeServiceGetPromocode(t *testing.T) {
+	ctx := context.Background()
+	repo := new(promocodeRepositoryMock)
+	svc := NewPromocodeService(repo)
+	id := uuid.New()
+
+	repo.On("GetByID", ctx, id).Return(&model.Promocode{ID: id, Code: "TEST"}, nil).Once()
+
+	resp, err := svc.GetPromocode(ctx, id)
+	assert.NoError(t, err)
+	assert.Equal(t, id, resp.ID)
+}
+
+func TestPromocodeServiceGetAllPromocodes(t *testing.T) {
+	ctx := context.Background()
+	repo := new(promocodeRepositoryMock)
+	svc := NewPromocodeService(repo)
+
+	repo.On("GetAll", ctx, 10, 0).Return([]*model.Promocode{{ID: uuid.New()}}, nil).Once()
+	repo.On("Count", ctx).Return(1, nil).Once()
+
+	resp, total, err := svc.GetAllPromocodes(ctx, 1, 10)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, resp, 1)
+}
+func TestPromocodeServiceApplyPromocodeSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(promocodeRepositoryMock)
+	svc := NewPromocodeService(repo)
+	code := "SALE10"
+	id := uuid.New()
+
+	repo.On("GetByCode", ctx, code).Return(&model.Promocode{ID: id, Code: code}, nil).Once()
+	repo.On("IncrementUseCount", ctx, id).Return(nil).Once()
+
+	err := svc.ApplyPromocode(ctx, code)
+	assert.NoError(t, err)
+	repo.AssertExpectations(t)
+}
+
+func TestPromocodeServiceDeletePromocodeSuccess(t *testing.T) {
+	ctx := context.Background()
+	repo := new(promocodeRepositoryMock)
+	svc := NewPromocodeService(repo)
+	id := uuid.New()
+
+	repo.On("Delete", ctx, id).Return(nil).Once()
+
+	err := svc.DeletePromocode(ctx, id)
+	assert.NoError(t, err)
+	repo.AssertExpectations(t)
+}

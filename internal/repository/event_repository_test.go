@@ -157,3 +157,31 @@ func TestEventRepository_Delete(t *testing.T) {
 		assert.ErrorIs(t, err, ErrEventNotFound)
 	})
 }
+
+func TestEventRepository_Count(t *testing.T) {
+	repo, mock, cleanup := setupEventMock(t)
+	defer cleanup()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT COUNT(*) FROM events")).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(10))
+
+	count, err := repo.Count(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, 10, count)
+}
+
+func TestEventRepository_GetByOrganizer(t *testing.T) {
+	repo, mock, cleanup := setupEventMock(t)
+	defer cleanup()
+
+	organizerID := uuid.New()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, title, description, venue, event_date, total_seats, available_seats, price, status, created_by, image_url, created_at, updated_at FROM events WHERE created_by = $1 ORDER BY event_date ASC LIMIT $2 OFFSET $3")).
+		WithArgs(organizerID, 10, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title"}).AddRow(uuid.New(), "Org Event"))
+
+	events, err := repo.GetByOrganizer(context.Background(), organizerID, 10, 0)
+	assert.NoError(t, err)
+	assert.Len(t, events, 1)
+}
+

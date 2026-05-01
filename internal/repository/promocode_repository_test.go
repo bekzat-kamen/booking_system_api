@@ -107,3 +107,74 @@ func TestPromocodeRepository_IncrementUseCount(t *testing.T) {
 	err := repo.IncrementUseCount(context.Background(), promoID)
 	assert.NoError(t, err)
 }
+
+func TestPromocodeRepository_GetByID(t *testing.T) {
+	repo, mock, cleanup := setupPromocodeMock(t)
+	defer cleanup()
+
+	promoID := uuid.New()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at FROM promocodes WHERE id = $1")).
+		WithArgs(promoID).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(promoID))
+
+	promo, err := repo.GetByID(context.Background(), promoID)
+	assert.NoError(t, err)
+	assert.Equal(t, promoID, promo.ID)
+}
+
+func TestPromocodeRepository_GetAll(t *testing.T) {
+	repo, mock, cleanup := setupPromocodeMock(t)
+	defer cleanup()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, code, description, discount_type, discount_value, min_amount, max_uses, used_count, valid_from, valid_until, is_active, created_by, created_at, updated_at FROM promocodes ORDER BY created_at DESC LIMIT $1 OFFSET $2")).
+		WithArgs(10, 0).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uuid.New()))
+
+	promos, err := repo.GetAll(context.Background(), 10, 0)
+	assert.NoError(t, err)
+	assert.Len(t, promos, 1)
+}
+
+func TestPromocodeRepository_Update(t *testing.T) {
+	repo, mock, cleanup := setupPromocodeMock(t)
+	defer cleanup()
+
+	promo := &model.Promocode{
+		ID:   uuid.New(),
+		Code: "NEWCODE",
+	}
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE promocodes SET description = $1, discount_value = $2, min_amount = $3, max_uses = $4, valid_until = $5, is_active = $6, updated_at = $7 WHERE id = $8")).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Update(context.Background(), promo)
+	assert.NoError(t, err)
+}
+
+func TestPromocodeRepository_Delete(t *testing.T) {
+	repo, mock, cleanup := setupPromocodeMock(t)
+	defer cleanup()
+
+	promoID := uuid.New()
+
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM promocodes WHERE id = $1")).
+		WithArgs(promoID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Delete(context.Background(), promoID)
+	assert.NoError(t, err)
+}
+
+func TestPromocodeRepository_Count(t *testing.T) {
+	repo, mock, cleanup := setupPromocodeMock(t)
+	defer cleanup()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT COUNT(*) FROM promocodes")).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(10))
+
+	count, err := repo.Count(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, 10, count)
+}
+

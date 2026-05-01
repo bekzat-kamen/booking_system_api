@@ -225,3 +225,77 @@ func TestAuthHandlerValidateEmailSuccess(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "true")
 	authSvc.AssertExpectations(t)
 }
+
+func TestAuthHandlerUpdateProfileSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	authSvc := new(authServiceMock)
+	h := NewAuthHandler(authSvc)
+
+	router := gin.New()
+	router.Use(addUserContext())
+	router.PUT("/profile", h.UpdateProfile)
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	reqBody := model.UpdateUserRequest{Name: "New Name"}
+
+	authSvc.On("UpdateProfile", mock.Anything, userID, &reqBody).Return(&model.User{ID: userID, Name: "New Name"}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodPut, "/profile", reqBody)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "New Name")
+}
+
+func TestAuthHandlerDeactivateProfileSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	authSvc := new(authServiceMock)
+	h := NewAuthHandler(authSvc)
+
+	router := gin.New()
+	router.Use(addUserContext())
+	router.DELETE("/profile", h.DeactivateProfile)
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	authSvc.On("DeactivateProfile", mock.Anything, userID).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodDelete, "/profile", nil)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	authSvc := new(authServiceMock)
+	h := NewAuthHandler(authSvc)
+
+	router := gin.New()
+	router.POST("/refresh", h.RefreshToken)
+
+	reqBody := map[string]string{"refresh_token": "old-refresh"}
+	authSvc.On("RefreshToken", mock.Anything, "old-refresh").Return(&service.LoginResponse{AccessToken: "new-access"}, nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/refresh", reqBody)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "new-access")
+}
+
+func TestAuthHandlerChangePasswordSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	authSvc := new(authServiceMock)
+	h := NewAuthHandler(authSvc)
+
+	router := gin.New()
+	router.Use(addUserContext())
+	router.POST("/change-password", h.ChangePassword)
+
+	userID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	reqBody := model.ChangePasswordRequest{CurrentPassword: "old", NewPassword: "newnewnew"}
+
+	authSvc.On("ChangePassword", mock.Anything, userID, &reqBody).Return(nil).Once()
+
+	w := performJSONRequest(router, http.MethodPost, "/change-password", reqBody)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+

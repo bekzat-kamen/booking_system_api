@@ -112,3 +112,33 @@ func TestSeatServiceReleaseSeatReserved(t *testing.T) {
 	assert.Equal(t, model.SeatStatusAvailable, seat.Status)
 	seatRepo.AssertExpectations(t)
 }
+
+func TestSeatServiceGetAvailableSeatsSuccess(t *testing.T) {
+	ctx := context.Background()
+	seatRepo := new(seatRepositoryMock)
+	svc := NewSeatService(seatRepo, new(eventRepositoryMock))
+	eventID := uuid.New()
+
+	seatRepo.On("GetByEventAndStatus", ctx, eventID, model.SeatStatusAvailable).Return([]*model.Seat{
+		{ID: uuid.New(), Status: model.SeatStatusAvailable},
+	}, nil).Once()
+
+	seats, err := svc.GetAvailableSeats(ctx, eventID)
+	assert.NoError(t, err)
+	assert.Len(t, seats, 1)
+}
+
+func TestSeatServiceBookSeatSuccess(t *testing.T) {
+	ctx := context.Background()
+	seatRepo := new(seatRepositoryMock)
+	svc := NewSeatService(seatRepo, new(eventRepositoryMock))
+	seatID := uuid.New()
+	seat := &model.Seat{ID: seatID, Status: model.SeatStatusReserved}
+
+	seatRepo.On("GetByID", ctx, seatID).Return(seat, nil).Once()
+	seatRepo.On("Update", ctx, seat).Return(nil).Once()
+
+	err := svc.BookSeat(ctx, seatID)
+	assert.NoError(t, err)
+	assert.Equal(t, model.SeatStatusBooked, seat.Status)
+}

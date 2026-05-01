@@ -128,3 +128,64 @@ func TestUserRepository_UpdatePassword(t *testing.T) {
 		assert.ErrorIs(t, err, ErrUserNotFound)
 	})
 }
+
+func TestUserRepository_ExistsByEmail(t *testing.T) {
+	repo, mock, cleanup := setupUserMock(t)
+	defer cleanup()
+
+	email := "test@example.com"
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")).
+		WithArgs(email).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+
+	exists, err := repo.ExistsByEmail(context.Background(), email)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+}
+
+func TestUserRepository_GetByID(t *testing.T) {
+	repo, mock, cleanup := setupUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, email, password_hash, name, role, status, email_verified, created_at, updated_at FROM users WHERE id = $1")).
+		WithArgs(userID).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userID))
+
+	user, err := repo.GetByID(context.Background(), userID)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, user.ID)
+}
+
+func TestUserRepository_Update(t *testing.T) {
+	repo, mock, cleanup := setupUserMock(t)
+	defer cleanup()
+
+	user := &model.User{
+		ID:    uuid.New(),
+		Email: "new@example.com",
+	}
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE users SET email = $1, name = $2, role = $3, status = $4, email_verified = $5, updated_at = $6 WHERE id = $7")).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Update(context.Background(), user)
+	assert.NoError(t, err)
+}
+
+func TestUserRepository_Delete(t *testing.T) {
+	repo, mock, cleanup := setupUserMock(t)
+	defer cleanup()
+
+	userID := uuid.New()
+
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM users WHERE id = $1")).
+		WithArgs(userID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Delete(context.Background(), userID)
+	assert.NoError(t, err)
+}
+

@@ -102,3 +102,65 @@ func TestPaymentRepository_UpdateStatus(t *testing.T) {
 	err := repo.UpdateStatus(context.Background(), paymentID, model.PaymentStatusSuccess)
 	assert.NoError(t, err)
 }
+
+func TestPaymentRepository_GetByBookingID(t *testing.T) {
+	repo, mock, cleanup := setupPaymentMock(t)
+	defer cleanup()
+
+	bookingID := uuid.New()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, paid_at, created_at, updated_at FROM payment_transactions WHERE booking_id = $1")).
+		WithArgs(bookingID).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uuid.New()))
+
+	payment, err := repo.GetByBookingID(context.Background(), bookingID)
+	assert.NoError(t, err)
+	assert.NotNil(t, payment)
+}
+
+func TestPaymentRepository_GetByTransactionID(t *testing.T) {
+	repo, mock, cleanup := setupPaymentMock(t)
+	defer cleanup()
+
+	txID := "tx-123"
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, booking_id, transaction_id, amount, status, payment_method, provider, provider_response, paid_at, created_at, updated_at FROM payment_transactions WHERE transaction_id = $1")).
+		WithArgs(txID).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uuid.New()))
+
+	payment, err := repo.GetByTransactionID(context.Background(), txID)
+	assert.NoError(t, err)
+	assert.NotNil(t, payment)
+}
+
+func TestPaymentRepository_Update(t *testing.T) {
+	repo, mock, cleanup := setupPaymentMock(t)
+	defer cleanup()
+
+	payment := &model.Payment{
+		ID:     uuid.New(),
+		Status: "success",
+	}
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE payment_transactions SET status = $1, transaction_id = $2, provider_response = $3, paid_at = $4, updated_at = $5 WHERE id = $6")).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Update(context.Background(), payment)
+	assert.NoError(t, err)
+}
+
+func TestPaymentRepository_SetProviderResponse(t *testing.T) {
+	repo, mock, cleanup := setupPaymentMock(t)
+	defer cleanup()
+
+	paymentID := uuid.New()
+	resp := "success"
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE payment_transactions SET provider_response = $1, updated_at = $2 WHERE id = $3")).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), paymentID).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.SetProviderResponse(context.Background(), paymentID, resp)
+	assert.NoError(t, err)
+}
+
