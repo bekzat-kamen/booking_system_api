@@ -1,8 +1,5 @@
 package model
 
-import (
-)
-
 // UserDetail представляет расширенную информацию о пользователе для админки
 type UserDetail struct {
 	User       User                   `json:"user"`
@@ -11,9 +8,9 @@ type UserDetail struct {
 
 // UserStats представляет общую статистику по пользователям
 type UserStats struct {
-	TotalUsers     int64 `json:"total_users"`
-	ActiveUsers    int64 `json:"active_users"`
-	BlockedUsers   int64 `json:"blocked_users"`
+	TotalUsers      int64 `json:"total_users"`
+	ActiveUsers     int64 `json:"active_users"`
+	BlockedUsers    int64 `json:"blocked_users"`
 	UnverifiedUsers int64 `json:"unverified_users"`
 }
 

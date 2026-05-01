@@ -100,9 +100,9 @@ func (s *AdminUserService) GetUserStats(ctx context.Context) (*model.UserStats, 
 	}
 
 	return &model.UserStats{
-		TotalUsers:     stats["total"],
-		ActiveUsers:    stats["active"],
-		BlockedUsers:   stats["blocked"],
+		TotalUsers:      stats["total"],
+		ActiveUsers:     stats["active"],
+		BlockedUsers:    stats["blocked"],
 		UnverifiedUsers: stats["pending"],
 	}, nil
 }
