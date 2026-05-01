@@ -393,8 +393,6 @@ func TestAdminEventHandlerPublishEventInternalError(t *testing.T) {
 	svc.AssertExpectations(t)
 }
 
-// ── GetEventsStats ───────────────────────────────────────────────────────────
-
 func TestAdminEventHandlerGetEventsStatsSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	svc := new(adminEventServiceMock)
