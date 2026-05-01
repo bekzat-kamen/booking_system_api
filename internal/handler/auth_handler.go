@@ -24,6 +24,18 @@ func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param user body model.CreateUserRequest true "User Registration Info"
+// @Success 201 {object} model.User
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req model.CreateUserRequest
 
@@ -45,6 +57,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, user)
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Login user with email and password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param credentials body model.LoginRequest true "User Login Credentials"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req model.LoginRequest
 
@@ -66,6 +90,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// RefreshToken godoc
+// @Summary Refresh access token
+// @Description Refresh access token using refresh token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param request body object{refresh_token=string} true "Refresh Token"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
@@ -89,6 +124,17 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get current user profile info
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} model.User
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /auth/profile [get]
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -137,6 +183,18 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// ChangePassword godoc
+// @Summary Change user password
+// @Description Change current user password
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param request body model.ChangePasswordRequest true "Change Password Request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Security BearerAuth
+// @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

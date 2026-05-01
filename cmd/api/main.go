@@ -1,3 +1,22 @@
+// @title Ticket Booking System API
+// @version 1.0
+// @description API Server for Ticket Booking System
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 package main
 
 import (
@@ -11,6 +30,10 @@ import (
 	"github.com/bekzat-kamen/booking_system_api/internal/repository"
 	"github.com/bekzat-kamen/booking_system_api/internal/service"
 	"github.com/gin-gonic/gin"
+
+	_ "github.com/bekzat-kamen/booking_system_api/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -109,7 +132,13 @@ func main() {
 	adminPromocodeHandler := handler.NewAdminPromocodeHandler(adminPromocodeService)
 
 	// --- Router ---
-	r := gin.Default()
+	r := gin.New()
+
+	// Global Middleware
+	r.Use(middleware.LoggerMiddleware(), gin.Recovery())
+
+	// Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Global Rate Limit
 	r.Use(middleware.RateLimitMiddleware(redisClient, middleware.DefaultRateLimitConfig))

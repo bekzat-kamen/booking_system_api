@@ -1,5 +1,5 @@
 # Этап сборки
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
@@ -28,8 +28,6 @@ RUN apk add --no-cache ca-certificates tzdata
 
 # Копирование исполняемого файла из этапа сборки
 COPY --from=builder /app/main .
-# Копирование файла окружения
-COPY .env .
 
 # Открытие порта
 EXPOSE 8080
