@@ -65,10 +65,9 @@ func TestAdminEventServiceGetEventDetailSuccess(t *testing.T) {
 	repo.On("GetEventStats", ctx, eventID).Return(map[string]interface{}{"total_bookings": int64(10)}, nil).Once()
 
 	detail, err := svc.GetEventDetail(ctx, eventID)
-
 	require.NoError(t, err)
-	assert.NotNil(t, detail["event"])
-	assert.NotNil(t, detail["statistics"])
+	assert.Equal(t, eventID, detail.Event.ID)
+	assert.NotNil(t, detail.Statistics)
 }
 
 func TestAdminEventServiceUpdateEventInvalidDate(t *testing.T) {

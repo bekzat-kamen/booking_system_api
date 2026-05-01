@@ -22,7 +22,7 @@ func (s *AdminEventService) GetAllEvents(ctx context.Context, page, limit int, s
 	return s.eventRepo.GetAllEvents(ctx, page, limit, status, organizerID)
 }
 
-func (s *AdminEventService) GetEventDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (s *AdminEventService) GetEventDetail(ctx context.Context, id uuid.UUID) (*model.EventDetail, error) {
 	event, err := s.eventRepo.GetEventByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -30,24 +30,9 @@ func (s *AdminEventService) GetEventDetail(ctx context.Context, id uuid.UUID) (m
 
 	stats, _ := s.eventRepo.GetEventStats(ctx, id)
 
-	detail := map[string]interface{}{
-		"event": map[string]interface{}{
-			"id":              event.ID,
-			"title":           event.Title,
-			"description":     event.Description,
-			"venue":           event.Venue,
-			"event_date":      event.EventDate,
-			"total_seats":     event.TotalSeats,
-			"available_seats": event.AvailableSeats,
-			"price":           event.Price,
-			"status":          event.Status,
-			"created_by":      event.CreatedBy,
-			"organizer_email": event.ImageURL,
-			"image_url":       event.ImageURL,
-			"created_at":      event.CreatedAt,
-			"updated_at":      event.UpdatedAt,
-		},
-		"statistics": stats,
+	detail := &model.EventDetail{
+		Event:      *event,
+		Statistics: stats,
 	}
 
 	return detail, nil
@@ -109,6 +94,16 @@ func (s *AdminEventService) PublishEvent(ctx context.Context, id uuid.UUID) (*mo
 	return s.eventRepo.GetEventByID(ctx, id)
 }
 
-func (s *AdminEventService) GetEventsStats(ctx context.Context) (map[string]int64, error) {
-	return s.eventRepo.GetEventsByStatus(ctx)
+func (s *AdminEventService) GetEventsStats(ctx context.Context) (*model.EventsStats, error) {
+	stats, err := s.eventRepo.GetEventsByStatus(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EventsStats{
+		TotalEvents:     stats["total"],
+		PublishedEvents: stats["published"],
+		DraftEvents:     stats["draft"],
+		CancelledEvents: stats["cancelled"],
+	}, nil
 }

@@ -73,11 +73,10 @@ func TestAdminBookingServiceGetBookingDetailSuccess(t *testing.T) {
 	repo.On("GetBookingPayment", ctx, id).Return(&model.Payment{ID: uuid.New()}, nil).Once()
 
 	detail, err := svc.GetBookingDetail(ctx, id)
-
 	require.NoError(t, err)
-	assert.NotNil(t, detail["booking"])
-	assert.NotNil(t, detail["seats"])
-	assert.NotNil(t, detail["payment"])
+	assert.Equal(t, id, detail.Booking.ID)
+	assert.Len(t, detail.Seats, 1)
+	assert.NotNil(t, detail.Payment)
 }
 
 func TestAdminBookingServiceCancelBookingCannotCancel(t *testing.T) {

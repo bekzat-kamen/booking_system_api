@@ -31,9 +31,9 @@ func (m *adminUserServiceMock) GetUserByID(ctx context.Context, id uuid.UUID) (*
 	return resp, args.Error(1)
 }
 
-func (m *adminUserServiceMock) GetUserDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (m *adminUserServiceMock) GetUserDetail(ctx context.Context, id uuid.UUID) (*model.UserDetail, error) {
 	args := m.Called(ctx, id)
-	resp, _ := args.Get(0).(map[string]interface{})
+	resp, _ := args.Get(0).(*model.UserDetail)
 	return resp, args.Error(1)
 }
 
@@ -52,9 +52,9 @@ func (m *adminUserServiceMock) UnblockUser(ctx context.Context, id uuid.UUID) er
 	return args.Error(0)
 }
 
-func (m *adminUserServiceMock) GetUserStats(ctx context.Context) (map[string]int64, error) {
+func (m *adminUserServiceMock) GetUserStats(ctx context.Context) (*model.UserStats, error) {
 	args := m.Called(ctx)
-	resp, _ := args.Get(0).(map[string]int64)
+	resp, _ := args.Get(0).(*model.UserStats)
 	return resp, args.Error(1)
 }
 
@@ -86,7 +86,7 @@ func TestAdminUserHandlerGetUserDetailNotFound(t *testing.T) {
 	router.GET("/admin/users/:id", h.GetUserDetail)
 
 	userID := uuid.New()
-	svc.On("GetUserDetail", mock.Anything, userID).Return((map[string]interface{})(nil), repository.ErrUserNotFound).Once()
+	svc.On("GetUserDetail", mock.Anything, userID).Return((*model.UserDetail)(nil), repository.ErrUserNotFound).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/users/"+userID.String(), nil)
 
@@ -121,12 +121,12 @@ func TestAdminUserHandlerGetUserStatsSuccess(t *testing.T) {
 	router := gin.New()
 	router.GET("/admin/users/stats", h.GetUserStats)
 
-	svc.On("GetUserStats", mock.Anything).Return(map[string]int64{"total": 10}, nil).Once()
+	svc.On("GetUserStats", mock.Anything).Return(&model.UserStats{TotalUsers: 10}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/users/stats", nil)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "\"total\":10")
+	assert.Contains(t, w.Body.String(), "\"total_users\":10")
 }
 
 func TestAdminUserHandlerGetUserDetailSuccess(t *testing.T) {
@@ -137,7 +137,7 @@ func TestAdminUserHandlerGetUserDetailSuccess(t *testing.T) {
 	router.GET("/admin/users/:id", h.GetUserDetail)
 
 	userID := uuid.New()
-	svc.On("GetUserDetail", mock.Anything, userID).Return(map[string]interface{}{"user": map[string]interface{}{"email": "test@test.com"}}, nil).Once()
+	svc.On("GetUserDetail", mock.Anything, userID).Return(&model.UserDetail{User: model.User{Email: "test@test.com"}}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/users/"+userID.String(), nil)
 

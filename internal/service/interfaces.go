@@ -83,38 +83,38 @@ type DashboardServiceInterface interface {
 type AdminUserServiceInterface interface {
 	GetAllUsers(ctx context.Context, page, limit int, status, role string) ([]*model.User, int, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
-	GetUserDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error)
+	GetUserDetail(ctx context.Context, id uuid.UUID) (*model.UserDetail, error)
 	UpdateUserRole(ctx context.Context, id uuid.UUID, role model.Role, adminID uuid.UUID) error
 	BlockUser(ctx context.Context, id uuid.UUID, adminID uuid.UUID) error
 	UnblockUser(ctx context.Context, id uuid.UUID) error
-	GetUserStats(ctx context.Context) (map[string]int64, error)
+	GetUserStats(ctx context.Context) (*model.UserStats, error)
 	DeleteUser(ctx context.Context, id uuid.UUID, adminID uuid.UUID) error
 }
 
 type AdminEventServiceInterface interface {
 	GetAllEvents(ctx context.Context, page, limit int, status, organizerID string) ([]*model.Event, int, error)
-	GetEventDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error)
+	GetEventDetail(ctx context.Context, id uuid.UUID) (*model.EventDetail, error)
 	UpdateEvent(ctx context.Context, id uuid.UUID, req *model.UpdateEventRequest) (*model.Event, error)
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	PublishEvent(ctx context.Context, id uuid.UUID) (*model.Event, error)
-	GetEventsStats(ctx context.Context) (map[string]int64, error)
+	GetEventsStats(ctx context.Context) (*model.EventsStats, error)
 }
 
 type AdminBookingServiceInterface interface {
 	GetAllBookings(ctx context.Context, page, limit int, status, userID, eventID string) ([]*model.Booking, int, error)
-	GetBookingDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error)
+	GetBookingDetail(ctx context.Context, id uuid.UUID) (*model.BookingDetail, error)
 	CancelBooking(ctx context.Context, id uuid.UUID, refund bool) error
 	RefundBooking(ctx context.Context, id uuid.UUID) error
-	GetBookingsStats(ctx context.Context) (map[string]interface{}, error)
+	GetBookingsStats(ctx context.Context) (*model.BookingsStats, error)
 	ExportBookingsToCSV(ctx context.Context, status string) ([][]string, error)
 }
 
 type AdminPromocodeServiceInterface interface {
 	GetAllPromocodes(ctx context.Context, page, limit int, isActive string) ([]*model.Promocode, int, error)
-	GetPromocodeDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error)
+	GetPromocodeDetail(ctx context.Context, id uuid.UUID) (*model.PromocodeDetail, error)
 	UpdatePromocode(ctx context.Context, id uuid.UUID, req *model.UpdatePromocodeRequest) (*model.Promocode, error)
 	DeletePromocode(ctx context.Context, id uuid.UUID) error
 	BulkDeactivate(ctx context.Context, ids []uuid.UUID) error
-	GetPromocodesStats(ctx context.Context) (map[string]int64, error)
+	GetPromocodesStats(ctx context.Context) (*model.PromocodesStats, error)
 	ExportPromocodesToCSV(ctx context.Context) ([][]string, error)
 }

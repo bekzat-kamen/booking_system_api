@@ -1,15 +1,105 @@
 basePath: /api/v1
 definitions:
-  handler.LoginResponse:
+  github_com_bekzat-kamen_booking_system_api_internal_handler.LoginResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
       user:
-        $ref: '#/definitions/model.User'
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
     type: object
-  model.ChangePasswordRequest:
+  github_com_bekzat-kamen_booking_system_api_internal_model.Booking:
+    properties:
+      created_at:
+        type: string
+      discount:
+        type: number
+      event_date:
+        type: string
+      event_id:
+        type: string
+      event_title:
+        type: string
+      event_venue:
+        type: string
+      expires_at:
+        type: string
+      final_amount:
+        type: number
+      id:
+        type: string
+      paid_at:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingStatus'
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+      user_email:
+        type: string
+      user_id:
+        type: string
+      user_name:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.BookingDetail:
+    properties:
+      booking:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking'
+      payment:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment'
+      seats:
+        items:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingSeat'
+        type: array
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.BookingSeat:
+    properties:
+      booking_id:
+        type: string
+      created_at:
+        type: string
+      price:
+        type: number
+      row_number:
+        type: string
+      seat_id:
+        type: string
+      seat_number:
+        type: string
+      seat_status:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus'
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.BookingStatus:
+    enum:
+    - pending
+    - confirmed
+    - cancelled
+    - expired
+    - completed
+    type: string
+    x-enum-varnames:
+    - BookingStatusPending
+    - BookingStatusConfirmed
+    - BookingStatusCancelled
+    - BookingStatusExpired
+    - BookingStatusCompleted
+  github_com_bekzat-kamen_booking_system_api_internal_model.BookingsStats:
+    properties:
+      cancelled_bookings:
+        type: integer
+      confirmed_bookings:
+        type: integer
+      pending_bookings:
+        type: integer
+      total_bookings:
+        type: integer
+      total_revenue:
+        type: number
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.ChangePasswordRequest:
     properties:
       current_password:
         type: string
@@ -20,7 +110,97 @@ definitions:
     - current_password
     - new_password
     type: object
-  model.CreateUserRequest:
+  github_com_bekzat-kamen_booking_system_api_internal_model.CreateBookingRequest:
+    properties:
+      event_id:
+        type: string
+      seat_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - event_id
+    - seat_ids
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.CreateEventRequest:
+    properties:
+      description:
+        maxLength: 5000
+        type: string
+      event_date:
+        description: RFC3339 формат
+        type: string
+      image_url:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      title:
+        maxLength: 255
+        minLength: 3
+        type: string
+      total_seats:
+        minimum: 1
+        type: integer
+      venue:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - event_date
+    - price
+    - title
+    - total_seats
+    - venue
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.CreatePaymentRequest:
+    properties:
+      booking_id:
+        type: string
+      payment_method:
+        allOf:
+        - $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod'
+        enum:
+        - card
+        - sbp
+        - cash
+    required:
+    - booking_id
+    - payment_method
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.CreatePromocodeRequest:
+    properties:
+      code:
+        maxLength: 50
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      discount_type:
+        allOf:
+        - $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType'
+        enum:
+        - percent
+        - fixed
+      discount_value:
+        minimum: 0
+        type: number
+      max_uses:
+        minimum: 0
+        type: integer
+      min_amount:
+        minimum: 0
+        type: number
+      valid_until:
+        description: RFC3339 формат
+        type: string
+    required:
+    - code
+    - discount_type
+    - discount_value
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.CreateUserRequest:
     properties:
       email:
         type: string
@@ -36,7 +216,142 @@ definitions:
     - name
     - password
     type: object
-  model.LoginRequest:
+  github_com_bekzat-kamen_booking_system_api_internal_model.DashboardStats:
+    properties:
+      active_promocodes:
+        type: integer
+      active_users:
+        type: integer
+      average_check:
+        type: number
+      cancelled_bookings:
+        type: integer
+      cancelled_events:
+        type: integer
+      confirmed_bookings:
+        type: integer
+      draft_events:
+        type: integer
+      failed_payments:
+        type: integer
+      month_revenue:
+        type: number
+      new_users_today:
+        type: integer
+      pending_bookings:
+        type: integer
+      published_events:
+        type: integer
+      refunded_payments:
+        type: integer
+      success_payments:
+        type: integer
+      today_revenue:
+        type: number
+      total_bookings:
+        type: integer
+      total_events:
+        type: integer
+      total_payments:
+        type: integer
+      total_promocodes:
+        type: integer
+      total_revenue:
+        type: number
+      total_users:
+        type: integer
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType:
+    enum:
+    - percent
+    - fixed
+    type: string
+    x-enum-varnames:
+    - DiscountTypePercent
+    - DiscountTypeFixed
+  github_com_bekzat-kamen_booking_system_api_internal_model.Event:
+    properties:
+      available_seats:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      event_date:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      organizer_email:
+        type: string
+      price:
+        type: number
+      status:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventStatus'
+      title:
+        type: string
+      total_seats:
+        type: integer
+      updated_at:
+        type: string
+      venue:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.EventDetail:
+    properties:
+      event:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+      statistics:
+        additionalProperties: true
+        type: object
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.EventStatus:
+    enum:
+    - draft
+    - published
+    - sold_out
+    - cancelled
+    - completed
+    type: string
+    x-enum-varnames:
+    - EventStatusDraft
+    - EventStatusPublished
+    - EventStatusSoldOut
+    - EventStatusCancelled
+    - EventStatusCompleted
+  github_com_bekzat-kamen_booking_system_api_internal_model.EventsStats:
+    properties:
+      cancelled_events:
+        type: integer
+      draft_events:
+        type: integer
+      published_events:
+        type: integer
+      total_events:
+        type: integer
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.GenerateSeatsRequest:
+    properties:
+      base_price:
+        minimum: 0
+        type: number
+      seats_per_row:
+        maximum: 100
+        minimum: 1
+        type: integer
+      total_rows:
+        maximum: 50
+        minimum: 1
+        type: integer
+    required:
+    - base_price
+    - seats_per_row
+    - total_rows
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.LoginRequest:
     properties:
       email:
         type: string
@@ -46,7 +361,144 @@ definitions:
     - email
     - password
     type: object
-  model.Role:
+  github_com_bekzat-kamen_booking_system_api_internal_model.Payment:
+    properties:
+      amount:
+        type: number
+      booking_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      paid_at:
+        type: string
+      payment_method:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod'
+      provider:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentStatus'
+      transaction_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod:
+    enum:
+    - card
+    - sbp
+    - cash
+    type: string
+    x-enum-varnames:
+    - PaymentMethodCard
+    - PaymentMethodSBP
+    - PaymentMethodCash
+  github_com_bekzat-kamen_booking_system_api_internal_model.PaymentStatus:
+    enum:
+    - pending
+    - success
+    - failed
+    - refunded
+    type: string
+    x-enum-varnames:
+    - PaymentStatusPending
+    - PaymentStatusSuccess
+    - PaymentStatusFailed
+    - PaymentStatusRefunded
+  github_com_bekzat-kamen_booking_system_api_internal_model.Promocode:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      discount_type:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType'
+      discount_value:
+        type: number
+      id:
+        type: string
+      is_active:
+        type: boolean
+      max_uses:
+        type: integer
+      min_amount:
+        type: number
+      updated_at:
+        type: string
+      used_count:
+        type: integer
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeDetail:
+    properties:
+      promocode:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Promocode'
+      usage_logs:
+        additionalProperties: true
+        type: object
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      discount_type:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType'
+      discount_value:
+        type: number
+      id:
+        type: string
+      is_active:
+        type: boolean
+      max_uses:
+        type: integer
+      min_amount:
+        type: number
+      used_count:
+        type: integer
+      valid_from:
+        type: string
+      valid_until:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeValidationResponse:
+    properties:
+      code:
+        type: string
+      discount_amount:
+        type: number
+      discount_type:
+        type: string
+      discount_value:
+        type: number
+      final_amount:
+        type: number
+      message:
+        type: string
+      original_amount:
+        type: number
+      valid:
+        type: boolean
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.PromocodesStats:
+    properties:
+      active_promocodes:
+        type: integer
+      total_promocodes:
+        type: integer
+      total_uses:
+        type: integer
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.Role:
     enum:
     - guest
     - user
@@ -60,7 +512,40 @@ definitions:
     - RoleOrganizer
     - RoleModerator
     - RoleAdmin
-  model.Status:
+  github_com_bekzat-kamen_booking_system_api_internal_model.Seat:
+    properties:
+      created_at:
+        type: string
+      event_id:
+        type: string
+      id:
+        type: string
+      price:
+        type: number
+      row_number:
+        type: string
+      seat_number:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus'
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus:
+    enum:
+    - available
+    - booked
+    - reserved
+    - blocked
+    type: string
+    x-enum-varnames:
+    - SeatStatusAvailable
+    - SeatStatusBooked
+    - SeatStatusReserved
+    - SeatStatusBlocked
+  github_com_bekzat-kamen_booking_system_api_internal_model.Status:
     enum:
     - active
     - blocked
@@ -70,7 +555,67 @@ definitions:
     - StatusActive
     - StatusBlocked
     - StatusPendingVerification
-  model.User:
+  github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest:
+    properties:
+      description:
+        maxLength: 5000
+        type: string
+      event_date:
+        type: string
+      image_url:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      status:
+        enum:
+        - draft
+        - published
+        - sold_out
+        - cancelled
+        - completed
+        type: string
+      title:
+        maxLength: 255
+        minLength: 3
+        type: string
+      total_seats:
+        minimum: 1
+        type: integer
+      venue:
+        maxLength: 255
+        minLength: 3
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      discount_value:
+        minimum: 0
+        type: number
+      is_active:
+        type: boolean
+      max_uses:
+        minimum: 0
+        type: integer
+      min_amount:
+        minimum: 0
+        type: number
+      valid_until:
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.User:
     properties:
       created_at:
         type: string
@@ -83,11 +628,64 @@ definitions:
       name:
         type: string
       role:
-        $ref: '#/definitions/model.Role'
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Role'
       status:
-        $ref: '#/definitions/model.Status'
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Status'
       updated_at:
         type: string
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.UserDetail:
+    properties:
+      statistics:
+        additionalProperties: true
+        type: object
+      user:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.UserStats:
+    properties:
+      active_users:
+        type: integer
+      blocked_users:
+        type: integer
+      total_users:
+        type: integer
+      unverified_users:
+        type: integer
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.ValidatePromocodeRequest:
+    properties:
+      code:
+        type: string
+      event_id:
+        type: string
+      total_amount:
+        minimum: 0
+        type: number
+    required:
+    - code
+    - event_id
+    - total_amount
+    type: object
+  github_com_bekzat-kamen_booking_system_api_internal_model.WebhookRequest:
+    properties:
+      amount:
+        type: number
+      signature:
+        type: string
+      status:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  internal_handler.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
     type: object
 host: localhost:8080
 info:
@@ -103,18 +701,727 @@ info:
   title: Ticket Booking System API
   version: "1.0"
 paths:
-  /auth/change-password:
+  /admin/bookings:
+    get:
+      description: '[RU] Возвращает список всех бронирований в системе с фильтрацией.
+        / [EN] Returns a list of all bookings in the system with filtering.'
+      parameters:
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Статус / [EN] Status'
+        in: query
+        name: status
+        type: string
+      - description: '[RU] ID пользователя / [EN] User ID'
+        in: query
+        name: user_id
+        type: string
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: query
+        name: event_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список всех бронирований / [EN] All bookings list'
+      tags:
+      - admin-bookings
+  /admin/bookings/{id}:
+    get:
+      description: '[RU] Возвращает полную информацию о бронировании, включая данные
+        пользователя и билеты. / [EN] Returns full booking info, including user data
+        and tickets.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingDetail'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Детали бронирования / [EN] Booking details'
+      tags:
+      - admin-bookings
+  /admin/bookings/{id}/cancel:
+    post:
+      description: '[RU] Принудительная отмена бронирования администратором. / [EN]
+        Forced booking cancellation by admin.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Вернуть средства? / [EN] Refund money?'
+        in: query
+        name: refund
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Отменить бронирование (админ) / [EN] Cancel booking (admin)'
+      tags:
+      - admin-bookings
+  /admin/bookings/{id}/refund:
+    post:
+      description: '[RU] Инициирует процесс возврата средств за бронирование. / [EN]
+        Initiates the booking refund process.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Оформить возврат / [EN] Process refund'
+      tags:
+      - admin-bookings
+  /admin/bookings/export:
+    get:
+      description: '[RU] Выгружает список бронирований в формате CSV. / [EN] Exports
+        the booking list in CSV format.'
+      parameters:
+      - description: '[RU] Фильтр по статусу / [EN] Status filter'
+        in: query
+        name: status
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: '[RU] Экспорт бронирований / [EN] Export bookings'
+      tags:
+      - admin-bookings
+  /admin/bookings/stats:
+    get:
+      description: '[RU] Общая статистика по всем бронированиям в системе. / [EN]
+        General statistics for all bookings in the system.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingsStats'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Статистика бронирований / [EN] Bookings statistics'
+      tags:
+      - admin-bookings
+  /admin/dashboard:
+    get:
+      description: '[RU] Возвращает агрегированную статистику для панели администратора.
+        / [EN] Returns aggregated statistics for the admin dashboard.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DashboardStats'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Статистика дашборда / [EN] Dashboard statistics'
+      tags:
+      - admin
+  /admin/events:
+    get:
+      description: '[RU] Расширенный список мероприятий с фильтрацией по статусу и
+        организатору. / [EN] Extended events list with status and organizer filtering.'
+      parameters:
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Статус / [EN] Status'
+        in: query
+        name: status
+        type: string
+      - description: '[RU] ID организатора / [EN] Organizer ID'
+        in: query
+        name: organizer_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список всех мероприятий (админ) / [EN] All events list (admin)'
+      tags:
+      - admin-events
+  /admin/events/{id}:
+    delete:
+      description: '[RU] Переводит мероприятие в статус CANCELLED. / [EN] Changes
+        event status to CANCELLED.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Отменить/Удалить мероприятие / [EN] Cancel/Delete event'
+      tags:
+      - admin-events
+    get:
+      description: '[RU] Возвращает полную информацию о мероприятии, включая статистику
+        бронирований. / [EN] Returns full event information including booking stats.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventDetail'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Детальная информация о мероприятии / [EN] Event details'
+      tags:
+      - admin-events
+    put:
+      consumes:
+      - application/json
+      description: '[RU] Принудительное обновление данных мероприятия администратором.
+        / [EN] Forced update of event data by admin.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Данные для обновления / [EN] Update data'
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обновить мероприятие (админ) / [EN] Update event (admin)'
+      tags:
+      - admin-events
+  /admin/events/{id}/publish:
+    post:
+      description: '[RU] Опубликовать мероприятие от лица администратора. / [EN] Publish
+        event as admin.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Опубликовать мероприятие (админ) / [EN] Publish event (admin)'
+      tags:
+      - admin-events
+  /admin/events/stats:
+    get:
+      description: '[RU] Общая статистика по всем мероприятиям в системе. / [EN] General
+        statistics for all events in the system.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventsStats'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Статистика мероприятий / [EN] Events statistics'
+      tags:
+      - admin-events
+  /admin/promocodes:
+    get:
+      description: '[RU] Возвращает полный список промокодов для администратора. /
+        [EN] Returns full list of promocodes for admin.'
+      parameters:
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Активен (true/false) / [EN] Is active (true/false)'
+        in: query
+        name: is_active
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список всех промокодов / [EN] All promocodes list'
+      tags:
+      - admin-promocodes
+  /admin/promocodes/{id}:
+    delete:
+      description: '[RU] Удаление промокода из базы данных администратором. / [EN]
+        Deletion of a promocode from the database by admin.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Удалить промокод (админ) / [EN] Delete promocode (admin)'
+      tags:
+      - admin-promocodes
+    get:
+      description: '[RU] Возвращает детальную информацию о промокоде, включая историю
+        использования. / [EN] Returns detailed promocode info, including usage history.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeDetail'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Детали промокода / [EN] Promocode details'
+      tags:
+      - admin-promocodes
+    put:
+      consumes:
+      - application/json
+      description: '[RU] Принудительное обновление параметров промокода. / [EN] Forced
+        update of promocode parameters.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Данные для обновления / [EN] Update data'
+        in: body
+        name: promocode
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Promocode'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обновить промокод (админ) / [EN] Update promocode (admin)'
+      tags:
+      - admin-promocodes
+  /admin/promocodes/bulk-deactivate:
     post:
       consumes:
       - application/json
-      description: Change current user password
+      description: '[RU] Деактивация сразу нескольких промокодов по их ID. / [EN]
+        Deactivation of several promocodes by their IDs at once.'
       parameters:
-      - description: Change Password Request
+      - description: '[RU] Список ID / [EN] List of IDs'
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.ChangePasswordRequest'
+          properties:
+            ids:
+              items:
+                type: string
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Массовая деактивация / [EN] Bulk deactivate'
+      tags:
+      - admin-promocodes
+  /admin/promocodes/export:
+    get:
+      description: '[RU] Выгружает список всех промокодов в CSV. / [EN] Exports the
+        list of all promocodes to CSV.'
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: '[RU] Экспорт промокодов / [EN] Export promocodes'
+      tags:
+      - admin-promocodes
+  /admin/promocodes/stats:
+    get:
+      description: '[RU] Общая статистика по использованию промокодов. / [EN] General
+        statistics on promocode usage.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodesStats'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Статистика промокодов / [EN] Promocodes statistics'
+      tags:
+      - admin-promocodes
+  /admin/users:
+    get:
+      description: '[RU] Возвращает список всех пользователей системы с фильтрацией
+        и пагинацией. / [EN] Returns a list of all system users with filtering and
+        pagination.'
+      parameters:
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Статус / [EN] Status'
+        in: query
+        name: status
+        type: string
+      - description: '[RU] Роль / [EN] Role'
+        in: query
+        name: role
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список всех пользователей / [EN] All users list'
+      tags:
+      - admin-users
+  /admin/users/{id}:
+    get:
+      description: '[RU] Возвращает полную информацию о пользователе, включая его
+        историю. / [EN] Returns full user information including history.'
+      parameters:
+      - description: '[RU] ID пользователя / [EN] User ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UserDetail'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Детальная информация о пользователе / [EN] User details'
+      tags:
+      - admin-users
+  /admin/users/{id}/block:
+    post:
+      description: '[RU] Переводит статус пользователя в BLOCKED. / [EN] Changes user
+        status to BLOCKED.'
+      parameters:
+      - description: '[RU] ID пользователя / [EN] User ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Заблокировать пользователя / [EN] Block user'
+      tags:
+      - admin-users
+  /admin/users/{id}/role:
+    patch:
+      consumes:
+      - application/json
+      description: '[RU] Позволяет администратору изменить роль пользователя. / [EN]
+        Allows admin to change user role.'
+      parameters:
+      - description: '[RU] ID пользователя / [EN] User ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Новая роль / [EN] New role'
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            role:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Изменить роль пользователя / [EN] Update user role'
+      tags:
+      - admin-users
+  /admin/users/{id}/unblock:
+    post:
+      description: '[RU] Восстанавливает активный статус пользователя. / [EN] Restores
+        active user status.'
+      parameters:
+      - description: '[RU] ID пользователя / [EN] User ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Разблокировать пользователя / [EN] Unblock user'
+      tags:
+      - admin-users
+  /admin/users/stats:
+    get:
+      description: '[RU] Возвращает статистику по количеству и статусам пользователей.
+        / [EN] Returns statistics on user count and statuses.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UserStats'
+      security:
+      - BearerAuth: []
+      summary: '[RU] Статистика пользователей / [EN] User stats'
+      tags:
+      - admin-users
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Обновление пароля текущего пользователя. / [EN] Updating
+        current user password.'
+      parameters:
+      - description: '[RU] Запрос на смену пароля / [EN] Change password request'
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.ChangePasswordRequest'
       produces:
       - application/json
       responses:
@@ -138,28 +1445,29 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Change user password
+      summary: '[RU] Изменить пароль / [EN] Change password'
       tags:
       - auth
   /auth/login:
     post:
       consumes:
       - application/json
-      description: Login user with email and password
+      description: '[RU] Аутентификация пользователя по email и паролю. / [EN] User
+        authentication by email and password.'
       parameters:
-      - description: User Login Credentials
+      - description: '[RU] Учетные данные / [EN] Credentials'
         in: body
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/model.LoginRequest'
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.LoginResponse'
+            $ref: '#/definitions/internal_handler.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -178,21 +1486,51 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Login user
+      summary: '[RU] Вход в систему / [EN] User login'
       tags:
       - auth
   /auth/profile:
-    get:
-      consumes:
-      - application/json
-      description: Get current user profile info
+    delete:
+      description: '[RU] Отключает аккаунт текущего пользователя. / [EN] Disables
+        the current user account.'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.User'
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Деактивировать профиль / [EN] Deactivate profile'
+      tags:
+      - auth
+    get:
+      consumes:
+      - application/json
+      description: '[RU] Получение данных текущего авторизованного пользователя. /
+        [EN] Getting current authorized user data.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
         "401":
           description: Unauthorized
           schema:
@@ -207,16 +1545,59 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get user profile
+      summary: '[RU] Профиль пользователя / [EN] User profile'
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      description: '[RU] Изменение персональных данных пользователя. / [EN] Changing
+        user personal data.'
+      parameters:
+      - description: '[RU] Данные для обновления / [EN] Update data'
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обновить профиль / [EN] Update profile'
       tags:
       - auth
   /auth/refresh:
     post:
       consumes:
       - application/json
-      description: Refresh access token using refresh token
+      description: '[RU] Получение нового access токена с помощью refresh токена.
+        / [EN] Getting a new access token using a refresh token.'
       parameters:
-      - description: Refresh Token
+      - description: '[RU] Токен обновления / [EN] Refresh token'
         in: body
         name: request
         required: true
@@ -231,7 +1612,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.LoginResponse'
+            $ref: '#/definitions/internal_handler.LoginResponse'
         "400":
           description: Bad Request
           schema:
@@ -244,28 +1625,29 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Refresh access token
+      summary: '[RU] Обновить токен / [EN] Refresh token'
       tags:
       - auth
   /auth/register:
     post:
       consumes:
       - application/json
-      description: Register a new user with email and password
+      description: '[RU] Создает новый аккаунт пользователя. / [EN] Creates a new
+        user account.'
       parameters:
-      - description: User Registration Info
+      - description: '[RU] Данные пользователя / [EN] User data'
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/model.CreateUserRequest'
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.User'
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User'
         "400":
           description: Bad Request
           schema:
@@ -284,9 +1666,1047 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Register a new user
+      summary: '[RU] Регистрация пользователя / [EN] User registration'
       tags:
       - auth
+  /auth/validate-email:
+    get:
+      consumes:
+      - application/json
+      description: '[RU] Проверяет доступен ли email для регистрации. / [EN] Checks
+        if an email is available for registration.'
+      parameters:
+      - description: '[RU] Email для проверки / [EN] Email to check'
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Проверить email / [EN] Validate email'
+      tags:
+      - auth
+  /bookings:
+    get:
+      description: '[RU] Возвращает историю бронирований текущего пользователя. /
+        [EN] Returns the booking history of the current user.'
+      parameters:
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список бронирований пользователя / [EN] User bookings list'
+      tags:
+      - bookings
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Бронирование мест на мероприятие. Резервирует места на время
+        оплаты. / [EN] Booking seats for an event. Reserves seats for the duration
+        of payment.'
+      parameters:
+      - description: '[RU] Данные бронирования / [EN] Booking data'
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Создать бронирование / [EN] Create booking'
+      tags:
+      - bookings
+  /bookings/{id}:
+    get:
+      description: '[RU] Возвращает детальную информацию о конкретном бронировании
+        пользователя. / [EN] Returns detailed information about a specific user booking.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Получить бронирование / [EN] Get booking'
+      tags:
+      - bookings
+  /bookings/{id}/cancel:
+    post:
+      description: '[RU] Отменяет активное бронирование до момента оплаты. / [EN]
+        Cancels an active booking before payment.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Отменить бронирование / [EN] Cancel booking'
+      tags:
+      - bookings
+  /bookings/{id}/confirm:
+    post:
+      description: '[RU] Подтверждает бронирование (обычно вызывается системой после
+        оплаты). / [EN] Confirms the booking (usually called by the system after payment).'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "410":
+          description: Gone
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Подтвердить бронирование / [EN] Confirm booking'
+      tags:
+      - bookings
+  /events:
+    get:
+      description: '[RU] Возвращает список всех мероприятий с поддержкой пагинации.
+        / [EN] Returns a list of all events with pagination support.'
+      parameters:
+      - description: '[RU] Лимит (по умолчанию 20) / [EN] Limit (default 20)'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Страница (по умолчанию 1) / [EN] Page (default 1)'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Получить все мероприятия / [EN] Get all events'
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Создает новое мероприятие. Требуется авторизация. / [EN]
+        Creates a new event. Authorization required.'
+      parameters:
+      - description: '[RU] Данные мероприятия / [EN] Event data'
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Создать мероприятие / [EN] Create event'
+      tags:
+      - events
+  /events/{id}:
+    delete:
+      description: '[RU] Удаляет мероприятие из системы. Только для организатора.
+        / [EN] Deletes an event from the system. For organizer only.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Удалить мероприятие / [EN] Delete event'
+      tags:
+      - events
+    get:
+      description: '[RU] Возвращает полную информацию о мероприятии по его идентификатору.
+        / [EN] Returns full information about an event by its ID.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Получить мероприятие по ID / [EN] Get event by ID'
+      tags:
+      - events
+    put:
+      consumes:
+      - application/json
+      description: '[RU] Обновляет данные существующего мероприятия. Только для организатора.
+        / [EN] Updates existing event data. For organizer only.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Данные для обновления / [EN] Update data'
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обновить мероприятие / [EN] Update event'
+      tags:
+      - events
+  /events/{id}/publish:
+    post:
+      description: '[RU] Переводит статус мероприятия в "опубликовано". / [EN] Changes
+        event status to "published".'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Опубликовать мероприятие / [EN] Publish event'
+      tags:
+      - events
+  /events/{id}/seats/available:
+    get:
+      description: '[RU] Возвращает список только свободных мест. / [EN] Returns a
+        list of only available seats.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Доступные места / [EN] Available seats'
+      tags:
+      - seats
+  /events/{id}/seats/generate:
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Автоматически генерирует сетку мест для мероприятия. / [EN]
+        Automatically generates a seat grid for an event.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Конфигурация мест / [EN] Seat configuration'
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.GenerateSeatsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Генерация мест / [EN] Generate seats'
+      tags:
+      - seats
+  /events/{id}/seats/map:
+    get:
+      description: '[RU] Возвращает карту всех мест мероприятия с их статусами. /
+        [EN] Returns a map of all event seats with their statuses.'
+      parameters:
+      - description: '[RU] ID мероприятия / [EN] Event ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Seat'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Карта мест / [EN] Seat map'
+      tags:
+      - seats
+  /events/organizer:
+    get:
+      description: '[RU] Возвращает список мероприятий, созданных текущим пользователем.
+        / [EN] Returns a list of events created by the current user.'
+      parameters:
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Получить мероприятия организатора / [EN] Get organizer events'
+      tags:
+      - events
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Создает новую запись о платеже для бронирования. / [EN] Creates
+        a new payment record for a booking.'
+      parameters:
+      - description: '[RU] Данные платежа / [EN] Payment data'
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Создать платеж / [EN] Create payment'
+      tags:
+      - payments
+  /payments/{id}:
+    get:
+      description: '[RU] Возвращает данные конкретного платежа. / [EN] Returns specific
+        payment data.'
+      parameters:
+      - description: '[RU] ID платежа / [EN] Payment ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Получить информацию о платеже / [EN] Get payment info'
+      tags:
+      - payments
+  /payments/{id}/process:
+    post:
+      description: '[RU] Имитирует процесс оплаты (переводит в статус SUCCESS). /
+        [EN] Simulates the payment process (changes status to SUCCESS).'
+      parameters:
+      - description: '[RU] ID платежа / [EN] Payment ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обработать платеж / [EN] Process payment'
+      tags:
+      - payments
+  /payments/booking/{booking_id}:
+    get:
+      description: '[RU] Возвращает данные платежа, связанного с указанным бронированием.
+        / [EN] Returns payment data associated with the specified booking.'
+      parameters:
+      - description: '[RU] ID бронирования / [EN] Booking ID'
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Платеж по ID бронирования / [EN] Get payment by booking ID'
+      tags:
+      - payments
+  /payments/webhook:
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Конечная точка для приема уведомлений от платежной системы.
+        / [EN] Endpoint for receiving notifications from the payment system.'
+      parameters:
+      - description: '[RU] Данные вебхука / [EN] Webhook data'
+        in: body
+        name: webhook
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.WebhookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Вебхук платежной системы / [EN] Payment system webhook'
+      tags:
+      - payments
+  /promocodes:
+    get:
+      description: '[RU] Возвращает список всех доступных промокодов. / [EN] Returns
+        a list of all available promocodes.'
+      parameters:
+      - description: '[RU] Лимит / [EN] Limit'
+        in: query
+        name: limit
+        type: integer
+      - description: '[RU] Страница / [EN] Page'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Список промокодов / [EN] List promocodes'
+      tags:
+      - promocodes
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Создает новый промокод для скидок. / [EN] Creates a new promocode
+        for discounts.'
+      parameters:
+      - description: '[RU] Данные промокода / [EN] Promocode data'
+        in: body
+        name: promocode
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreatePromocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Создать промокод / [EN] Create promocode'
+      tags:
+      - promocodes
+  /promocodes/{id}:
+    delete:
+      description: '[RU] Полностью удаляет промокод из системы. / [EN] Completely
+        deletes a promocode from the system.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Удалить промокод / [EN] Delete promocode'
+      tags:
+      - promocodes
+    get:
+      description: '[RU] Возвращает данные конкретного промокода по ID. / [EN] Returns
+        specific promocode data by ID.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Получить промокод / [EN] Get promocode'
+      tags:
+      - promocodes
+    put:
+      consumes:
+      - application/json
+      description: '[RU] Обновляет параметры существующего промокода. / [EN] Updates
+        existing promocode parameters.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: '[RU] Данные для обновления / [EN] Update data'
+        in: body
+        name: promocode
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Обновить промокод / [EN] Update promocode'
+      tags:
+      - promocodes
+  /promocodes/{id}/deactivate:
+    post:
+      description: '[RU] Делает промокод неактивным. / [EN] Makes the promocode inactive.'
+      parameters:
+      - description: '[RU] ID промокода / [EN] Promocode ID'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: '[RU] Деактивировать промокод / [EN] Deactivate promocode'
+      tags:
+      - promocodes
+  /promocodes/validate:
+    post:
+      consumes:
+      - application/json
+      description: '[RU] Проверяет валидность промокода для конкретного заказа. /
+        [EN] Checks the validity of a promocode for a specific order.'
+      parameters:
+      - description: '[RU] Данные для проверки / [EN] Validation data'
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.ValidatePromocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeValidationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: '[RU] Проверить промокод / [EN] Validate promocode'
+      tags:
+      - promocodes
 securityDefinitions:
   BearerAuth:
     in: header

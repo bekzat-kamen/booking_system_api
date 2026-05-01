@@ -26,9 +26,9 @@ func (m *adminEventServiceMock) GetAllEvents(ctx context.Context, page, limit in
 	return resp, args.Int(1), args.Error(2)
 }
 
-func (m *adminEventServiceMock) GetEventDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (m *adminEventServiceMock) GetEventDetail(ctx context.Context, id uuid.UUID) (*model.EventDetail, error) {
 	args := m.Called(ctx, id)
-	resp, _ := args.Get(0).(map[string]interface{})
+	resp, _ := args.Get(0).(*model.EventDetail)
 	return resp, args.Error(1)
 }
 
@@ -49,9 +49,9 @@ func (m *adminEventServiceMock) PublishEvent(ctx context.Context, id uuid.UUID) 
 	return resp, args.Error(1)
 }
 
-func (m *adminEventServiceMock) GetEventsStats(ctx context.Context) (map[string]int64, error) {
+func (m *adminEventServiceMock) GetEventsStats(ctx context.Context) (*model.EventsStats, error) {
 	args := m.Called(ctx)
-	resp, _ := args.Get(0).(map[string]int64)
+	resp, _ := args.Get(0).(*model.EventsStats)
 	return resp, args.Error(1)
 }
 
@@ -128,7 +128,9 @@ func TestAdminEventHandlerGetEventDetailSuccess(t *testing.T) {
 
 	eventID := uuid.New()
 	svc.On("GetEventDetail", mock.Anything, eventID).
-		Return(map[string]interface{}{"id": eventID.String(), "title": "Test Event"}, nil).Once()
+		Return(&model.EventDetail{
+			Event: model.Event{ID: eventID, Title: "Test Event"},
+		}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/events/"+eventID.String(), nil)
 
@@ -160,7 +162,7 @@ func TestAdminEventHandlerGetEventDetailNotFound(t *testing.T) {
 
 	eventID := uuid.New()
 	svc.On("GetEventDetail", mock.Anything, eventID).
-		Return((map[string]interface{})(nil), repository.ErrEventNotFound).Once()
+		Return((*model.EventDetail)(nil), repository.ErrEventNotFound).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/events/"+eventID.String(), nil)
 
@@ -178,7 +180,7 @@ func TestAdminEventHandlerGetEventDetailInternalError(t *testing.T) {
 
 	eventID := uuid.New()
 	svc.On("GetEventDetail", mock.Anything, eventID).
-		Return((map[string]interface{})(nil), errors.New("db error")).Once()
+		Return((*model.EventDetail)(nil), errors.New("db error")).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/events/"+eventID.String(), nil)
 
@@ -401,12 +403,12 @@ func TestAdminEventHandlerGetEventsStatsSuccess(t *testing.T) {
 	router.GET("/admin/events/stats", h.GetEventsStats)
 
 	svc.On("GetEventsStats", mock.Anything).
-		Return(map[string]int64{"total": 15, "published": 10}, nil).Once()
+		Return(&model.EventsStats{TotalEvents: 15, PublishedEvents: 10}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/events/stats", nil)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), `"total"`)
+	assert.Contains(t, w.Body.String(), "\"total_events\":15")
 	svc.AssertExpectations(t)
 }
 
@@ -418,7 +420,7 @@ func TestAdminEventHandlerGetEventsStatsInternalError(t *testing.T) {
 	router.GET("/admin/events/stats", h.GetEventsStats)
 
 	svc.On("GetEventsStats", mock.Anything).
-		Return((map[string]int64)(nil), errors.New("db error")).Once()
+		Return((*model.EventsStats)(nil), errors.New("db error")).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/events/stats", nil)
 

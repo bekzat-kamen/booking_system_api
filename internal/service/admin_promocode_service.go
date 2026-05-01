@@ -22,31 +22,17 @@ func (s *AdminPromocodeService) GetAllPromocodes(ctx context.Context, page, limi
 	return s.promocodeRepo.GetAllPromocodes(ctx, page, limit, isActive)
 }
 
-func (s *AdminPromocodeService) GetPromocodeDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (s *AdminPromocodeService) GetPromocodeDetail(ctx context.Context, id uuid.UUID) (*model.PromocodeDetail, error) {
 	promocode, err := s.promocodeRepo.GetPromocodeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	stats, _ := s.promocodeRepo.GetPromocodeUsageStats(ctx, id)
+	logs, _ := s.promocodeRepo.GetPromocodeUsageStats(ctx, id)
 
-	detail := map[string]interface{}{
-		"promocode": map[string]interface{}{
-			"id":             promocode.ID,
-			"code":           promocode.Code,
-			"description":    promocode.Description,
-			"discount_type":  promocode.DiscountType,
-			"discount_value": promocode.DiscountValue,
-			"min_amount":     promocode.MinAmount,
-			"max_uses":       promocode.MaxUses,
-			"used_count":     promocode.UsedCount,
-			"valid_from":     promocode.ValidFrom,
-			"valid_until":    promocode.ValidUntil,
-			"is_active":      promocode.IsActive,
-			"created_at":     promocode.CreatedAt,
-			"updated_at":     promocode.UpdatedAt,
-		},
-		"statistics": stats,
+	detail := &model.PromocodeDetail{
+		Promocode: *promocode,
+		UsageLogs: logs,
 	}
 
 	return detail, nil
@@ -102,8 +88,17 @@ func (s *AdminPromocodeService) BulkDeactivate(ctx context.Context, ids []uuid.U
 	return s.promocodeRepo.BulkDeactivatePromocodes(ctx, ids)
 }
 
-func (s *AdminPromocodeService) GetPromocodesStats(ctx context.Context) (map[string]int64, error) {
-	return s.promocodeRepo.GetPromocodesStats(ctx)
+func (s *AdminPromocodeService) GetPromocodesStats(ctx context.Context) (*model.PromocodesStats, error) {
+	stats, err := s.promocodeRepo.GetPromocodesStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.PromocodesStats{
+		TotalPromocodes:  stats["total"],
+		ActivePromocodes: stats["active"],
+		TotalUses:        stats["total_uses"],
+	}, nil
 }
 
 func (s *AdminPromocodeService) ExportPromocodesToCSV(ctx context.Context) ([][]string, error) {

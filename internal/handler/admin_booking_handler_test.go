@@ -25,9 +25,9 @@ func (m *adminBookingServiceMock) GetAllBookings(ctx context.Context, page, limi
 	return resp, args.Int(1), args.Error(2)
 }
 
-func (m *adminBookingServiceMock) GetBookingDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (m *adminBookingServiceMock) GetBookingDetail(ctx context.Context, id uuid.UUID) (*model.BookingDetail, error) {
 	args := m.Called(ctx, id)
-	resp, _ := args.Get(0).(map[string]interface{})
+	resp, _ := args.Get(0).(*model.BookingDetail)
 	return resp, args.Error(1)
 }
 
@@ -41,9 +41,9 @@ func (m *adminBookingServiceMock) RefundBooking(ctx context.Context, id uuid.UUI
 	return args.Error(0)
 }
 
-func (m *adminBookingServiceMock) GetBookingsStats(ctx context.Context) (map[string]interface{}, error) {
+func (m *adminBookingServiceMock) GetBookingsStats(ctx context.Context) (*model.BookingsStats, error) {
 	args := m.Called(ctx)
-	resp, _ := args.Get(0).(map[string]interface{})
+	resp, _ := args.Get(0).(*model.BookingsStats)
 	return resp, args.Error(1)
 }
 
@@ -68,7 +68,7 @@ func TestAdminBookingHandlerGetAllBookingsSuccess(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), bookingID.String())
-	assert.Contains(t, w.Body.String(), `"total":1`)
+	assert.Contains(t, w.Body.String(), "\"total\":1")
 	svc.AssertExpectations(t)
 }
 
@@ -114,7 +114,9 @@ func TestAdminBookingHandlerGetBookingDetailSuccess(t *testing.T) {
 
 	bookingID := uuid.New()
 	svc.On("GetBookingDetail", mock.Anything, bookingID).
-		Return(map[string]interface{}{"id": bookingID.String(), "status": "pending"}, nil).Once()
+		Return(&model.BookingDetail{
+			Booking: model.Booking{ID: bookingID, Status: model.BookingStatusPending},
+		}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/bookings/"+bookingID.String(), nil)
 
@@ -145,7 +147,7 @@ func TestAdminBookingHandlerGetBookingDetailNotFound(t *testing.T) {
 
 	bookingID := uuid.New()
 	svc.On("GetBookingDetail", mock.Anything, bookingID).
-		Return((map[string]interface{})(nil), repository.ErrBookingNotFound).Once()
+		Return((*model.BookingDetail)(nil), repository.ErrBookingNotFound).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/bookings/"+bookingID.String(), nil)
 
@@ -324,12 +326,12 @@ func TestAdminBookingHandlerGetBookingsStatsSuccess(t *testing.T) {
 	router.GET("/admin/bookings/stats", h.GetBookingsStats)
 
 	svc.On("GetBookingsStats", mock.Anything).
-		Return(map[string]interface{}{"total": 42, "cancelled": 5}, nil).Once()
+		Return(&model.BookingsStats{TotalBookings: 42, CancelledBookings: 5}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/bookings/stats", nil)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "\"total\"")
+	assert.Contains(t, w.Body.String(), "\"total_bookings\":42")
 	svc.AssertExpectations(t)
 }
 
@@ -341,7 +343,7 @@ func TestAdminBookingHandlerGetBookingsStatsInternalError(t *testing.T) {
 	router.GET("/admin/bookings/stats", h.GetBookingsStats)
 
 	svc.On("GetBookingsStats", mock.Anything).
-		Return((map[string]interface{})(nil), errors.New("db error")).Once()
+		Return((*model.BookingsStats)(nil), errors.New("db error")).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/bookings/stats", nil)
 

@@ -65,10 +65,9 @@ func TestAdminPromocodeServiceGetPromocodeDetailSuccess(t *testing.T) {
 	repo.On("GetPromocodeUsageStats", ctx, id).Return(map[string]interface{}{"used_count": int64(3)}, nil).Once()
 
 	detail, err := svc.GetPromocodeDetail(ctx, id)
-
 	require.NoError(t, err)
-	assert.NotNil(t, detail["promocode"])
-	assert.NotNil(t, detail["statistics"])
+	assert.Equal(t, id, detail.Promocode.ID)
+	assert.NotNil(t, detail.UsageLogs)
 }
 
 func TestAdminPromocodeServiceUpdatePromocodeInvalidDiscount(t *testing.T) {
@@ -164,7 +163,7 @@ func TestAdminPromocodeServiceGetPromocodesStats(t *testing.T) {
 
 	res, err := svc.GetPromocodesStats(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(50), res["total"])
+	assert.Equal(t, int64(50), res.TotalPromocodes)
 }
 
 func TestAdminPromocodeServiceBulkDeactivateSuccess(t *testing.T) {

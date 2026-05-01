@@ -20,6 +20,17 @@ func NewAdminPromocodeHandler(adminPromocodeService service.AdminPromocodeServic
 	return &AdminPromocodeHandler{adminPromocodeService: adminPromocodeService}
 }
 
+// GetAllPromocodes godoc
+// @Summary [RU] Список всех промокодов / [EN] All promocodes list
+// @Description [RU] Возвращает полный список промокодов для администратора. / [EN] Returns full list of promocodes for admin.
+// @Tags admin-promocodes
+// @Produce  json
+// @Param page query int false "[RU] Страница / [EN] Page"
+// @Param limit query int false "[RU] Лимит / [EN] Limit"
+// @Param is_active query string false "[RU] Активен (true/false) / [EN] Is active (true/false)"
+// @Success 200 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /admin/promocodes [get]
 func (h *AdminPromocodeHandler) GetAllPromocodes(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -42,6 +53,16 @@ func (h *AdminPromocodeHandler) GetAllPromocodes(c *gin.Context) {
 	})
 }
 
+// GetPromocodeDetail godoc
+// @Summary [RU] Детали промокода / [EN] Promocode details
+// @Description [RU] Возвращает детальную информацию о промокоде, включая историю использования. / [EN] Returns detailed promocode info, including usage history.
+// @Tags admin-promocodes
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Success 200 {object} model.PromocodeDetail
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/promocodes/{id} [get]
 func (h *AdminPromocodeHandler) GetPromocodeDetail(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -62,6 +83,17 @@ func (h *AdminPromocodeHandler) GetPromocodeDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, detail)
 }
 
+// UpdatePromocode godoc
+// @Summary [RU] Обновить промокод (админ) / [EN] Update promocode (admin)
+// @Description [RU] Принудительное обновление параметров промокода. / [EN] Forced update of promocode parameters.
+// @Tags admin-promocodes
+// @Accept  json
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Param promocode body model.UpdatePromocodeRequest true "[RU] Данные для обновления / [EN] Update data"
+// @Success 200 {object} model.Promocode
+// @Security BearerAuth
+// @Router /admin/promocodes/{id} [put]
 func (h *AdminPromocodeHandler) UpdatePromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -92,6 +124,15 @@ func (h *AdminPromocodeHandler) UpdatePromocode(c *gin.Context) {
 	c.JSON(http.StatusOK, promocode)
 }
 
+// DeletePromocode godoc
+// @Summary [RU] Удалить промокод (админ) / [EN] Delete promocode (admin)
+// @Description [RU] Удаление промокода из базы данных администратором. / [EN] Deletion of a promocode from the database by admin.
+// @Tags admin-promocodes
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Success 200 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/promocodes/{id} [delete]
 func (h *AdminPromocodeHandler) DeletePromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -112,6 +153,16 @@ func (h *AdminPromocodeHandler) DeletePromocode(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "promocode deleted successfully"})
 }
 
+// BulkDeactivate godoc
+// @Summary [RU] Массовая деактивация / [EN] Bulk deactivate
+// @Description [RU] Деактивация сразу нескольких промокодов по их ID. / [EN] Deactivation of several promocodes by their IDs at once.
+// @Tags admin-promocodes
+// @Accept  json
+// @Produce  json
+// @Param request body object{ids=[]string} true "[RU] Список ID / [EN] List of IDs"
+// @Success 200 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/promocodes/bulk-deactivate [post]
 func (h *AdminPromocodeHandler) BulkDeactivate(c *gin.Context) {
 	var req struct {
 		Ids []string `json:"ids" binding:"required"`
@@ -140,6 +191,14 @@ func (h *AdminPromocodeHandler) BulkDeactivate(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "promocodes deactivated successfully"})
 }
 
+// GetPromocodesStats godoc
+// @Summary [RU] Статистика промокодов / [EN] Promocodes statistics
+// @Description [RU] Общая статистика по использованию промокодов. / [EN] General statistics on promocode usage.
+// @Tags admin-promocodes
+// @Produce  json
+// @Success 200 {object} model.PromocodesStats
+// @Security BearerAuth
+// @Router /admin/promocodes/stats [get]
 func (h *AdminPromocodeHandler) GetPromocodesStats(c *gin.Context) {
 	stats, err := h.adminPromocodeService.GetPromocodesStats(c.Request.Context())
 	if err != nil {
@@ -150,6 +209,14 @@ func (h *AdminPromocodeHandler) GetPromocodesStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
+// ExportPromocodes godoc
+// @Summary [RU] Экспорт промокодов / [EN] Export promocodes
+// @Description [RU] Выгружает список всех промокодов в CSV. / [EN] Exports the list of all promocodes to CSV.
+// @Tags admin-promocodes
+// @Produce  text/csv
+// @Success 200 {file} file
+// @Security BearerAuth
+// @Router /admin/promocodes/export [get]
 func (h *AdminPromocodeHandler) ExportPromocodes(c *gin.Context) {
 	rows, err := h.adminPromocodeService.ExportPromocodesToCSV(c.Request.Context())
 	if err != nil {

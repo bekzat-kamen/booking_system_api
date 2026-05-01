@@ -133,9 +133,8 @@ func TestAdminUserServiceGetUserDetail(t *testing.T) {
 
 	detail, err := svc.GetUserDetail(ctx, userID)
 	assert.NoError(t, err)
-	stats := detail["statistics"].(map[string]interface{})
-	assert.Equal(t, int64(5), stats["total_bookings"])
-	assert.Equal(t, 150.0, stats["total_spent"])
+	assert.Equal(t, int64(5), detail.Statistics["total_bookings"])
+	assert.Equal(t, 150.0, detail.Statistics["total_spent"])
 }
 
 func TestAdminUserServiceUpdateUserRoleSuccess(t *testing.T) {
@@ -176,7 +175,7 @@ func TestAdminUserServiceGetUserStats(t *testing.T) {
 
 	res, err := svc.GetUserStats(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(100), res["total"])
+	assert.Equal(t, int64(100), res.TotalUsers)
 }
 func TestAdminUserServiceUnblockUserSuccess(t *testing.T) {
 	ctx := context.Background()

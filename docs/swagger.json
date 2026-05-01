@@ -18,6 +18,1091 @@
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
+        "/admin/bookings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает список всех бронирований в системе с фильтрацией. / [EN] Returns a list of all bookings in the system with filtering.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Список всех бронирований / [EN] All bookings list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] Статус / [EN] Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] ID пользователя / [EN] User ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "event_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Выгружает список бронирований в формате CSV. / [EN] Exports the booking list in CSV format.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Экспорт бронирований / [EN] Export bookings",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] Фильтр по статусу / [EN] Status filter",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Общая статистика по всем бронированиям в системе. / [EN] General statistics for all bookings in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Статистика бронирований / [EN] Bookings statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingsStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает полную информацию о бронировании, включая данные пользователя и билеты. / [EN] Returns full booking info, including user data and tickets.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Детали бронирования / [EN] Booking details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Принудительная отмена бронирования администратором. / [EN] Forced booking cancellation by admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Отменить бронирование (админ) / [EN] Cancel booking (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "[RU] Вернуть средства? / [EN] Refund money?",
+                        "name": "refund",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/{id}/refund": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Инициирует процесс возврата средств за бронирование. / [EN] Initiates the booking refund process.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-bookings"
+                ],
+                "summary": "[RU] Оформить возврат / [EN] Process refund",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает агрегированную статистику для панели администратора. / [EN] Returns aggregated statistics for the admin dashboard.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "[RU] Статистика дашборда / [EN] Dashboard statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DashboardStats"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/events": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Расширенный список мероприятий с фильтрацией по статусу и организатору. / [EN] Extended events list with status and organizer filtering.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Список всех мероприятий (админ) / [EN] All events list (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] Статус / [EN] Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] ID организатора / [EN] Organizer ID",
+                        "name": "organizer_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/events/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Общая статистика по всем мероприятиям в системе. / [EN] General statistics for all events in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Статистика мероприятий / [EN] Events statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventsStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/events/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает полную информацию о мероприятии, включая статистику бронирований. / [EN] Returns full event information including booking stats.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Детальная информация о мероприятии / [EN] Event details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Принудительное обновление данных мероприятия администратором. / [EN] Forced update of event data by admin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Обновить мероприятие (админ) / [EN] Update event (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Данные для обновления / [EN] Update data",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Переводит мероприятие в статус CANCELLED. / [EN] Changes event status to CANCELLED.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Отменить/Удалить мероприятие / [EN] Cancel/Delete event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/events/{id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Опубликовать мероприятие от лица администратора. / [EN] Publish event as admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-events"
+                ],
+                "summary": "[RU] Опубликовать мероприятие (админ) / [EN] Publish event (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/promocodes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает полный список промокодов для администратора. / [EN] Returns full list of promocodes for admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Список всех промокодов / [EN] All promocodes list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] Активен (true/false) / [EN] Is active (true/false)",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/promocodes/bulk-deactivate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Деактивация сразу нескольких промокодов по их ID. / [EN] Deactivation of several promocodes by their IDs at once.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Массовая деактивация / [EN] Bulk deactivate",
+                "parameters": [
+                    {
+                        "description": "[RU] Список ID / [EN] List of IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/promocodes/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Выгружает список всех промокодов в CSV. / [EN] Exports the list of all promocodes to CSV.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Экспорт промокодов / [EN] Export promocodes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/promocodes/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Общая статистика по использованию промокодов. / [EN] General statistics on promocode usage.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Статистика промокодов / [EN] Promocodes statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodesStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/promocodes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает детальную информацию о промокоде, включая историю использования. / [EN] Returns detailed promocode info, including usage history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Детали промокода / [EN] Promocode details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Принудительное обновление параметров промокода. / [EN] Forced update of promocode parameters.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Обновить промокод (админ) / [EN] Update promocode (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Данные для обновления / [EN] Update data",
+                        "name": "promocode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Promocode"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Удаление промокода из базы данных администратором. / [EN] Deletion of a promocode from the database by admin.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-promocodes"
+                ],
+                "summary": "[RU] Удалить промокод (админ) / [EN] Delete promocode (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает список всех пользователей системы с фильтрацией и пагинацией. / [EN] Returns a list of all system users with filtering and pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Список всех пользователей / [EN] All users list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] Статус / [EN] Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "[RU] Роль / [EN] Role",
+                        "name": "role",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает статистику по количеству и статусам пользователей. / [EN] Returns statistics on user count and statuses.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Статистика пользователей / [EN] User stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UserStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает полную информацию о пользователе, включая его историю. / [EN] Returns full user information including history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Детальная информация о пользователе / [EN] User details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID пользователя / [EN] User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UserDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/block": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Переводит статус пользователя в BLOCKED. / [EN] Changes user status to BLOCKED.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Заблокировать пользователя / [EN] Block user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID пользователя / [EN] User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/role": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Позволяет администратору изменить роль пользователя. / [EN] Allows admin to change user role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Изменить роль пользователя / [EN] Update user role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID пользователя / [EN] User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Новая роль / [EN] New role",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "role": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/unblock": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Восстанавливает активный статус пользователя. / [EN] Restores active user status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "[RU] Разблокировать пользователя / [EN] Unblock user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID пользователя / [EN] User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change-password": {
             "post": {
                 "security": [
@@ -25,7 +1110,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Change current user password",
+                "description": "[RU] Обновление пароля текущего пользователя. / [EN] Updating current user password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -35,15 +1120,15 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Change user password",
+                "summary": "[RU] Изменить пароль / [EN] Change password",
                 "parameters": [
                     {
-                        "description": "Change Password Request",
+                        "description": "[RU] Запрос на смену пароля / [EN] Change password request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChangePasswordRequest"
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -80,7 +1165,7 @@
         },
         "/auth/login": {
             "post": {
-                "description": "Login user with email and password",
+                "description": "[RU] Аутентификация пользователя по email и паролю. / [EN] User authentication by email and password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -90,15 +1175,15 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Login user",
+                "summary": "[RU] Вход в систему / [EN] User login",
                 "parameters": [
                     {
-                        "description": "User Login Credentials",
+                        "description": "[RU] Учетные данные / [EN] Credentials",
                         "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LoginRequest"
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.LoginRequest"
                         }
                     }
                 ],
@@ -106,7 +1191,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginResponse"
+                            "$ref": "#/definitions/internal_handler.LoginResponse"
                         }
                     },
                     "400": {
@@ -146,7 +1231,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get current user profile info",
+                "description": "[RU] Получение данных текущего авторизованного пользователя. / [EN] Getting current authorized user data.",
                 "consumes": [
                     "application/json"
                 ],
@@ -156,12 +1241,12 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Get user profile",
+                "summary": "[RU] Профиль пользователя / [EN] User profile",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.User"
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
                         }
                     },
                     "401": {
@@ -183,11 +1268,14 @@
                         }
                     }
                 }
-            }
-        },
-        "/auth/refresh": {
-            "post": {
-                "description": "Refresh access token using refresh token",
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Изменение персональных данных пользователя. / [EN] Changing user personal data.",
                 "consumes": [
                     "application/json"
                 ],
@@ -197,10 +1285,115 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Refresh access token",
+                "summary": "[RU] Обновить профиль / [EN] Update profile",
                 "parameters": [
                     {
-                        "description": "Refresh Token",
+                        "description": "[RU] Данные для обновления / [EN] Update data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Отключает аккаунт текущего пользователя. / [EN] Disables the current user account.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "[RU] Деактивировать профиль / [EN] Deactivate profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "[RU] Получение нового access токена с помощью refresh токена. / [EN] Getting a new access token using a refresh token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "[RU] Обновить токен / [EN] Refresh token",
+                "parameters": [
+                    {
+                        "description": "[RU] Токен обновления / [EN] Refresh token",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -218,7 +1411,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginResponse"
+                            "$ref": "#/definitions/internal_handler.LoginResponse"
                         }
                     },
                     "400": {
@@ -244,7 +1437,7 @@
         },
         "/auth/register": {
             "post": {
-                "description": "Register a new user with email and password",
+                "description": "[RU] Создает новый аккаунт пользователя. / [EN] Creates a new user account.",
                 "consumes": [
                     "application/json"
                 ],
@@ -254,15 +1447,15 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Register a new user",
+                "summary": "[RU] Регистрация пользователя / [EN] User registration",
                 "parameters": [
                     {
-                        "description": "User Registration Info",
+                        "description": "[RU] Данные пользователя / [EN] User data",
                         "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateUserRequest"
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateUserRequest"
                         }
                     }
                 ],
@@ -270,7 +1463,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/model.User"
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
                         }
                     },
                     "400": {
@@ -302,10 +1495,1578 @@
                     }
                 }
             }
+        },
+        "/auth/validate-email": {
+            "get": {
+                "description": "[RU] Проверяет доступен ли email для регистрации. / [EN] Checks if an email is available for registration.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "[RU] Проверить email / [EN] Validate email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] Email для проверки / [EN] Email to check",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает историю бронирований текущего пользователя. / [EN] Returns the booking history of the current user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "[RU] Список бронирований пользователя / [EN] User bookings list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Бронирование мест на мероприятие. Резервирует места на время оплаты. / [EN] Booking seats for an event. Reserves seats for the duration of payment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "[RU] Создать бронирование / [EN] Create booking",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные бронирования / [EN] Booking data",
+                        "name": "booking",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает детальную информацию о конкретном бронировании пользователя. / [EN] Returns detailed information about a specific user booking.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "[RU] Получить бронирование / [EN] Get booking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Отменяет активное бронирование до момента оплаты. / [EN] Cancels an active booking before payment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "[RU] Отменить бронирование / [EN] Cancel booking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/confirm": {
+            "post": {
+                "description": "[RU] Подтверждает бронирование (обычно вызывается системой после оплаты). / [EN] Confirms the booking (usually called by the system after payment).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "[RU] Подтвердить бронирование / [EN] Confirm booking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events": {
+            "get": {
+                "description": "[RU] Возвращает список всех мероприятий с поддержкой пагинации. / [EN] Returns a list of all events with pagination support.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Получить все мероприятия / [EN] Get all events",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит (по умолчанию 20) / [EN] Limit (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница (по умолчанию 1) / [EN] Page (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Создает новое мероприятие. Требуется авторизация. / [EN] Creates a new event. Authorization required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Создать мероприятие / [EN] Create event",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные мероприятия / [EN] Event data",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/organizer": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает список мероприятий, созданных текущим пользователем. / [EN] Returns a list of events created by the current user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Получить мероприятия организатора / [EN] Get organizer events",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}": {
+            "get": {
+                "description": "[RU] Возвращает полную информацию о мероприятии по его идентификатору. / [EN] Returns full information about an event by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Получить мероприятие по ID / [EN] Get event by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Обновляет данные существующего мероприятия. Только для организатора. / [EN] Updates existing event data. For organizer only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Обновить мероприятие / [EN] Update event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Данные для обновления / [EN] Update data",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Удаляет мероприятие из системы. Только для организатора. / [EN] Deletes an event from the system. For organizer only.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Удалить мероприятие / [EN] Delete event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Переводит статус мероприятия в \"опубликовано\". / [EN] Changes event status to \"published\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "[RU] Опубликовать мероприятие / [EN] Publish event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/seats/available": {
+            "get": {
+                "description": "[RU] Возвращает список только свободных мест. / [EN] Returns a list of only available seats.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seats"
+                ],
+                "summary": "[RU] Доступные места / [EN] Available seats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/seats/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Автоматически генерирует сетку мест для мероприятия. / [EN] Automatically generates a seat grid for an event.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seats"
+                ],
+                "summary": "[RU] Генерация мест / [EN] Generate seats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Конфигурация мест / [EN] Seat configuration",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.GenerateSeatsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/seats/map": {
+            "get": {
+                "description": "[RU] Возвращает карту всех мест мероприятия с их статусами. / [EN] Returns a map of all event seats with their statuses.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seats"
+                ],
+                "summary": "[RU] Карта мест / [EN] Seat map",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID мероприятия / [EN] Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Seat"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Создает новую запись о платеже для бронирования. / [EN] Creates a new payment record for a booking.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "[RU] Создать платеж / [EN] Create payment",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные платежа / [EN] Payment data",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreatePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/booking/{booking_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает данные платежа, связанного с указанным бронированием. / [EN] Returns payment data associated with the specified booking.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "[RU] Платеж по ID бронирования / [EN] Get payment by booking ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID бронирования / [EN] Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/webhook": {
+            "post": {
+                "description": "[RU] Конечная точка для приема уведомлений от платежной системы. / [EN] Endpoint for receiving notifications from the payment system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "[RU] Вебхук платежной системы / [EN] Payment system webhook",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные вебхука / [EN] Webhook data",
+                        "name": "webhook",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.WebhookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает данные конкретного платежа. / [EN] Returns specific payment data.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "[RU] Получить информацию о платеже / [EN] Get payment info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID платежа / [EN] Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/{id}/process": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Имитирует процесс оплаты (переводит в статус SUCCESS). / [EN] Simulates the payment process (changes status to SUCCESS).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "[RU] Обработать платеж / [EN] Process payment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID платежа / [EN] Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/promocodes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает список всех доступных промокодов. / [EN] Returns a list of all available promocodes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Список промокодов / [EN] List promocodes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "[RU] Лимит / [EN] Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "[RU] Страница / [EN] Page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Создает новый промокод для скидок. / [EN] Creates a new promocode for discounts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Создать промокод / [EN] Create promocode",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные промокода / [EN] Promocode data",
+                        "name": "promocode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.CreatePromocodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/promocodes/validate": {
+            "post": {
+                "description": "[RU] Проверяет валидность промокода для конкретного заказа. / [EN] Checks the validity of a promocode for a specific order.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Проверить промокод / [EN] Validate promocode",
+                "parameters": [
+                    {
+                        "description": "[RU] Данные для проверки / [EN] Validation data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.ValidatePromocodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeValidationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/promocodes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Возвращает данные конкретного промокода по ID. / [EN] Returns specific promocode data by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Получить промокод / [EN] Get promocode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Обновляет параметры существующего промокода. / [EN] Updates existing promocode parameters.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Обновить промокод / [EN] Update promocode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "[RU] Данные для обновления / [EN] Update data",
+                        "name": "promocode",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Полностью удаляет промокод из системы. / [EN] Completely deletes a promocode from the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Удалить промокод / [EN] Delete promocode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/promocodes/{id}/deactivate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "[RU] Делает промокод неактивным. / [EN] Makes the promocode inactive.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "[RU] Деактивировать промокод / [EN] Deactivate promocode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "[RU] ID промокода / [EN] Promocode ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "handler.LoginResponse": {
+        "github_com_bekzat-kamen_booking_system_api_internal_handler.LoginResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -315,11 +3076,144 @@
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/model.User"
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
                 }
             }
         },
-        "model.ChangePasswordRequest": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Booking": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "event_date": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "event_title": {
+                    "type": "string"
+                },
+                "event_venue": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "final_amount": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingStatus"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_email": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.BookingDetail": {
+            "type": "object",
+            "properties": {
+                "booking": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Booking"
+                },
+                "payment": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Payment"
+                },
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.BookingSeat"
+                    }
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.BookingSeat": {
+            "type": "object",
+            "properties": {
+                "booking_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "row_number": {
+                    "type": "string"
+                },
+                "seat_id": {
+                    "type": "string"
+                },
+                "seat_number": {
+                    "type": "string"
+                },
+                "seat_status": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.BookingStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "expired",
+                "completed"
+            ],
+            "x-enum-varnames": [
+                "BookingStatusPending",
+                "BookingStatusConfirmed",
+                "BookingStatusCancelled",
+                "BookingStatusExpired",
+                "BookingStatusCompleted"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.BookingsStats": {
+            "type": "object",
+            "properties": {
+                "cancelled_bookings": {
+                    "type": "integer"
+                },
+                "confirmed_bookings": {
+                    "type": "integer"
+                },
+                "pending_bookings": {
+                    "type": "integer"
+                },
+                "total_bookings": {
+                    "type": "integer"
+                },
+                "total_revenue": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.ChangePasswordRequest": {
             "type": "object",
             "required": [
                 "current_password",
@@ -335,7 +3229,136 @@
                 }
             }
         },
-        "model.CreateUserRequest": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.CreateBookingRequest": {
+            "type": "object",
+            "required": [
+                "event_id",
+                "seat_ids"
+            ],
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "seat_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.CreateEventRequest": {
+            "type": "object",
+            "required": [
+                "event_date",
+                "price",
+                "title",
+                "total_seats",
+                "venue"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "event_date": {
+                    "description": "RFC3339 формат",
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "total_seats": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "venue": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.CreatePaymentRequest": {
+            "type": "object",
+            "required": [
+                "booking_id",
+                "payment_method"
+            ],
+            "properties": {
+                "booking_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "enum": [
+                        "card",
+                        "sbp",
+                        "cash"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod"
+                        }
+                    ]
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.CreatePromocodeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "discount_type",
+                "discount_value"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "discount_type": {
+                    "enum": [
+                        "percent",
+                        "fixed"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType"
+                        }
+                    ]
+                },
+                "discount_value": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "min_amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "valid_until": {
+                    "description": "RFC3339 формат",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.CreateUserRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -357,7 +3380,203 @@
                 }
             }
         },
-        "model.LoginRequest": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.DashboardStats": {
+            "type": "object",
+            "properties": {
+                "active_promocodes": {
+                    "type": "integer"
+                },
+                "active_users": {
+                    "type": "integer"
+                },
+                "average_check": {
+                    "type": "number"
+                },
+                "cancelled_bookings": {
+                    "type": "integer"
+                },
+                "cancelled_events": {
+                    "type": "integer"
+                },
+                "confirmed_bookings": {
+                    "type": "integer"
+                },
+                "draft_events": {
+                    "type": "integer"
+                },
+                "failed_payments": {
+                    "type": "integer"
+                },
+                "month_revenue": {
+                    "type": "number"
+                },
+                "new_users_today": {
+                    "type": "integer"
+                },
+                "pending_bookings": {
+                    "type": "integer"
+                },
+                "published_events": {
+                    "type": "integer"
+                },
+                "refunded_payments": {
+                    "type": "integer"
+                },
+                "success_payments": {
+                    "type": "integer"
+                },
+                "today_revenue": {
+                    "type": "number"
+                },
+                "total_bookings": {
+                    "type": "integer"
+                },
+                "total_events": {
+                    "type": "integer"
+                },
+                "total_payments": {
+                    "type": "integer"
+                },
+                "total_promocodes": {
+                    "type": "integer"
+                },
+                "total_revenue": {
+                    "type": "number"
+                },
+                "total_users": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType": {
+            "type": "string",
+            "enum": [
+                "percent",
+                "fixed"
+            ],
+            "x-enum-varnames": [
+                "DiscountTypePercent",
+                "DiscountTypeFixed"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Event": {
+            "type": "object",
+            "properties": {
+                "available_seats": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "event_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "organizer_email": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.EventStatus"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_seats": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "venue": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.EventDetail": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Event"
+                },
+                "statistics": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.EventStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "published",
+                "sold_out",
+                "cancelled",
+                "completed"
+            ],
+            "x-enum-varnames": [
+                "EventStatusDraft",
+                "EventStatusPublished",
+                "EventStatusSoldOut",
+                "EventStatusCancelled",
+                "EventStatusCompleted"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.EventsStats": {
+            "type": "object",
+            "properties": {
+                "cancelled_events": {
+                    "type": "integer"
+                },
+                "draft_events": {
+                    "type": "integer"
+                },
+                "published_events": {
+                    "type": "integer"
+                },
+                "total_events": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.GenerateSeatsRequest": {
+            "type": "object",
+            "required": [
+                "base_price",
+                "seats_per_row",
+                "total_rows"
+            ],
+            "properties": {
+                "base_price": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "seats_per_row": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "total_rows": {
+                    "type": "integer",
+                    "maximum": 50,
+                    "minimum": 1
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -372,7 +3591,210 @@
                 }
             }
         },
-        "model.Role": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Payment": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "booking_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.PaymentStatus"
+                },
+                "transaction_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PaymentMethod": {
+            "type": "string",
+            "enum": [
+                "card",
+                "sbp",
+                "cash"
+            ],
+            "x-enum-varnames": [
+                "PaymentMethodCard",
+                "PaymentMethodSBP",
+                "PaymentMethodCash"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PaymentStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "success",
+                "failed",
+                "refunded"
+            ],
+            "x-enum-varnames": [
+                "PaymentStatusPending",
+                "PaymentStatusSuccess",
+                "PaymentStatusFailed",
+                "PaymentStatusRefunded"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Promocode": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_type": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType"
+                },
+                "discount_value": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_uses": {
+                    "type": "integer"
+                },
+                "min_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "used_count": {
+                    "type": "integer"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeDetail": {
+            "type": "object",
+            "properties": {
+                "promocode": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Promocode"
+                },
+                "usage_logs": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_type": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.DiscountType"
+                },
+                "discount_value": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_uses": {
+                    "type": "integer"
+                },
+                "min_amount": {
+                    "type": "number"
+                },
+                "used_count": {
+                    "type": "integer"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_until": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PromocodeValidationResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "discount_amount": {
+                    "type": "number"
+                },
+                "discount_type": {
+                    "type": "string"
+                },
+                "discount_value": {
+                    "type": "number"
+                },
+                "final_amount": {
+                    "type": "number"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "original_amount": {
+                    "type": "number"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.PromocodesStats": {
+            "type": "object",
+            "properties": {
+                "active_promocodes": {
+                    "type": "integer"
+                },
+                "total_promocodes": {
+                    "type": "integer"
+                },
+                "total_uses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Role": {
             "type": "string",
             "enum": [
                 "guest",
@@ -389,7 +3811,54 @@
                 "RoleAdmin"
             ]
         },
-        "model.Status": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Seat": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "row_number": {
+                    "type": "string"
+                },
+                "seat_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.SeatStatus": {
+            "type": "string",
+            "enum": [
+                "available",
+                "booked",
+                "reserved",
+                "blocked"
+            ],
+            "x-enum-varnames": [
+                "SeatStatusAvailable",
+                "SeatStatusBooked",
+                "SeatStatusReserved",
+                "SeatStatusBlocked"
+            ]
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.Status": {
             "type": "string",
             "enum": [
                 "active",
@@ -402,7 +3871,90 @@
                 "StatusPendingVerification"
             ]
         },
-        "model.User": {
+        "github_com_bekzat-kamen_booking_system_api_internal_model.UpdateEventRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "event_date": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "published",
+                        "sold_out",
+                        "cancelled",
+                        "completed"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "total_seats": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "venue": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.UpdatePromocodeRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "discount_value": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "min_amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "valid_until": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -421,13 +3973,93 @@
                     "type": "string"
                 },
                 "role": {
-                    "$ref": "#/definitions/model.Role"
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Role"
                 },
                 "status": {
-                    "$ref": "#/definitions/model.Status"
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.Status"
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.UserDetail": {
+            "type": "object",
+            "properties": {
+                "statistics": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.UserStats": {
+            "type": "object",
+            "properties": {
+                "active_users": {
+                    "type": "integer"
+                },
+                "blocked_users": {
+                    "type": "integer"
+                },
+                "total_users": {
+                    "type": "integer"
+                },
+                "unverified_users": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.ValidatePromocodeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "event_id",
+                "total_amount"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "github_com_bekzat-kamen_booking_system_api_internal_model.WebhookRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_bekzat-kamen_booking_system_api_internal_model.User"
                 }
             }
         }

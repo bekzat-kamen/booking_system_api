@@ -19,6 +19,20 @@ func NewAdminUserHandler(adminUserService service.AdminUserServiceInterface) *Ad
 	return &AdminUserHandler{adminUserService: adminUserService}
 }
 
+// GetAllUsers godoc
+// @Summary [RU] Список всех пользователей / [EN] All users list
+// @Description [RU] Возвращает список всех пользователей системы с фильтрацией и пагинацией. / [EN] Returns a list of all system users with filtering and pagination.
+// @Tags admin-users
+// @Produce  json
+// @Param page query int false "[RU] Страница / [EN] Page"
+// @Param limit query int false "[RU] Лимит / [EN] Limit"
+// @Param status query string false "[RU] Статус / [EN] Status"
+// @Param role query string false "[RU] Роль / [EN] Role"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/users [get]
 func (h *AdminUserHandler) GetAllUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -56,6 +70,16 @@ func (h *AdminUserHandler) GetAllUsers(c *gin.Context) {
 	})
 }
 
+// GetUserDetail godoc
+// @Summary [RU] Детальная информация о пользователе / [EN] User details
+// @Description [RU] Возвращает полную информацию о пользователе, включая его историю. / [EN] Returns full user information including history.
+// @Tags admin-users
+// @Produce  json
+// @Param id path string true "[RU] ID пользователя / [EN] User ID"
+// @Success 200 {object} model.UserDetail
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/users/{id} [get]
 func (h *AdminUserHandler) GetUserDetail(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -76,6 +100,18 @@ func (h *AdminUserHandler) GetUserDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, detail)
 }
 
+// UpdateUserRole godoc
+// @Summary [RU] Изменить роль пользователя / [EN] Update user role
+// @Description [RU] Позволяет администратору изменить роль пользователя. / [EN] Allows admin to change user role.
+// @Tags admin-users
+// @Accept  json
+// @Produce  json
+// @Param id path string true "[RU] ID пользователя / [EN] User ID"
+// @Param request body object{role=string} true "[RU] Новая роль / [EN] New role"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/users/{id}/role [patch]
 func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 	adminID, _ := c.Get("user_id")
 
@@ -110,6 +146,17 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "role updated successfully"})
 }
 
+// BlockUser godoc
+// @Summary [RU] Заблокировать пользователя / [EN] Block user
+// @Description [RU] Переводит статус пользователя в BLOCKED. / [EN] Changes user status to BLOCKED.
+// @Tags admin-users
+// @Produce  json
+// @Param id path string true "[RU] ID пользователя / [EN] User ID"
+// @Success 200 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/users/{id}/block [post]
 func (h *AdminUserHandler) BlockUser(c *gin.Context) {
 	adminID, _ := c.Get("user_id")
 
@@ -140,6 +187,16 @@ func (h *AdminUserHandler) BlockUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user blocked successfully"})
 }
 
+// UnblockUser godoc
+// @Summary [RU] Разблокировать пользователя / [EN] Unblock user
+// @Description [RU] Восстанавливает активный статус пользователя. / [EN] Restores active user status.
+// @Tags admin-users
+// @Produce  json
+// @Param id path string true "[RU] ID пользователя / [EN] User ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /admin/users/{id}/unblock [post]
 func (h *AdminUserHandler) UnblockUser(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -160,6 +217,14 @@ func (h *AdminUserHandler) UnblockUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user unblocked successfully"})
 }
 
+// GetUserStats godoc
+// @Summary [RU] Статистика пользователей / [EN] User stats
+// @Description [RU] Возвращает статистику по количеству и статусам пользователей. / [EN] Returns statistics on user count and statuses.
+// @Tags admin-users
+// @Produce  json
+// @Success 200 {object} model.UserStats
+// @Security BearerAuth
+// @Router /admin/users/stats [get]
 func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 	stats, err := h.adminUserService.GetUserStats(c.Request.Context())
 	if err != nil {

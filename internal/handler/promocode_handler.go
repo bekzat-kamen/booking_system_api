@@ -19,6 +19,18 @@ func NewPromocodeHandler(promocodeService service.PromocodeServiceInterface) *Pr
 	return &PromocodeHandler{promocodeService: promocodeService}
 }
 
+// CreatePromocode godoc
+// @Summary [RU] Создать промокод / [EN] Create promocode
+// @Description [RU] Создает новый промокод для скидок. / [EN] Creates a new promocode for discounts.
+// @Tags promocodes
+// @Accept  json
+// @Produce  json
+// @Param promocode body model.CreatePromocodeRequest true "[RU] Данные промокода / [EN] Promocode data"
+// @Success 201 {object} model.PromocodeResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Security BearerAuth
+// @Router /promocodes [post]
 func (h *PromocodeHandler) CreatePromocode(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -57,6 +69,17 @@ func (h *PromocodeHandler) CreatePromocode(c *gin.Context) {
 	})
 }
 
+// ValidatePromocode godoc
+// @Summary [RU] Проверить промокод / [EN] Validate promocode
+// @Description [RU] Проверяет валидность промокода для конкретного заказа. / [EN] Checks the validity of a promocode for a specific order.
+// @Tags promocodes
+// @Accept  json
+// @Produce  json
+// @Param request body model.ValidatePromocodeRequest true "[RU] Данные для проверки / [EN] Validation data"
+// @Success 200 {object} model.PromocodeValidationResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /promocodes/validate [post]
 func (h *PromocodeHandler) ValidatePromocode(c *gin.Context) {
 	var req model.ValidatePromocodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -73,6 +96,16 @@ func (h *PromocodeHandler) ValidatePromocode(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetPromocode godoc
+// @Summary [RU] Получить промокод / [EN] Get promocode
+// @Description [RU] Возвращает данные конкретного промокода по ID. / [EN] Returns specific promocode data by ID.
+// @Tags promocodes
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Success 200 {object} model.PromocodeResponse
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /promocodes/{id} [get]
 func (h *PromocodeHandler) GetPromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -105,6 +138,16 @@ func (h *PromocodeHandler) GetPromocode(c *gin.Context) {
 	})
 }
 
+// GetAllPromocodes godoc
+// @Summary [RU] Список промокодов / [EN] List promocodes
+// @Description [RU] Возвращает список всех доступных промокодов. / [EN] Returns a list of all available promocodes.
+// @Tags promocodes
+// @Produce  json
+// @Param limit query int false "[RU] Лимит / [EN] Limit"
+// @Param page query int false "[RU] Страница / [EN] Page"
+// @Success 200 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /promocodes [get]
 func (h *PromocodeHandler) GetAllPromocodes(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -143,6 +186,19 @@ func (h *PromocodeHandler) GetAllPromocodes(c *gin.Context) {
 	})
 }
 
+// UpdatePromocode godoc
+// @Summary [RU] Обновить промокод / [EN] Update promocode
+// @Description [RU] Обновляет параметры существующего промокода. / [EN] Updates existing promocode parameters.
+// @Tags promocodes
+// @Accept  json
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Param promocode body model.UpdatePromocodeRequest true "[RU] Данные для обновления / [EN] Update data"
+// @Success 200 {object} model.PromocodeResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /promocodes/{id} [put]
 func (h *PromocodeHandler) UpdatePromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -185,6 +241,16 @@ func (h *PromocodeHandler) UpdatePromocode(c *gin.Context) {
 	})
 }
 
+// DeletePromocode godoc
+// @Summary [RU] Удалить промокод / [EN] Delete promocode
+// @Description [RU] Полностью удаляет промокод из системы. / [EN] Completely deletes a promocode from the system.
+// @Tags promocodes
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /promocodes/{id} [delete]
 func (h *PromocodeHandler) DeletePromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -205,6 +271,16 @@ func (h *PromocodeHandler) DeletePromocode(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "promocode deleted successfully"})
 }
 
+// DeactivatePromocode godoc
+// @Summary [RU] Деактивировать промокод / [EN] Deactivate promocode
+// @Description [RU] Делает промокод неактивным. / [EN] Makes the promocode inactive.
+// @Tags promocodes
+// @Produce  json
+// @Param id path string true "[RU] ID промокода / [EN] Promocode ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /promocodes/{id}/deactivate [post]
 func (h *PromocodeHandler) DeactivatePromocode(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

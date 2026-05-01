@@ -37,7 +37,7 @@ func (s *AdminUserService) GetUserByID(ctx context.Context, id uuid.UUID) (*mode
 	return user, nil
 }
 
-func (s *AdminUserService) GetUserDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (s *AdminUserService) GetUserDetail(ctx context.Context, id uuid.UUID) (*model.UserDetail, error) {
 	user, err := s.userRepo.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -46,18 +46,9 @@ func (s *AdminUserService) GetUserDetail(ctx context.Context, id uuid.UUID) (map
 	bookingsCount, _ := s.userRepo.GetUserBookingsCount(ctx, id)
 	spentAmount, _ := s.userRepo.GetUserSpentAmount(ctx, id)
 
-	detail := map[string]interface{}{
-		"user": map[string]interface{}{
-			"id":             user.ID,
-			"email":          user.Email,
-			"name":           user.Name,
-			"role":           user.Role,
-			"status":         user.Status,
-			"email_verified": user.EmailVerified,
-			"created_at":     user.CreatedAt,
-			"updated_at":     user.UpdatedAt,
-		},
-		"statistics": map[string]interface{}{
+	detail := &model.UserDetail{
+		User: *user,
+		Statistics: map[string]interface{}{
 			"total_bookings": bookingsCount,
 			"total_spent":    spentAmount,
 		},
@@ -102,8 +93,18 @@ func (s *AdminUserService) UnblockUser(ctx context.Context, id uuid.UUID) error 
 	return s.userRepo.UpdateUserStatus(ctx, id, model.StatusActive)
 }
 
-func (s *AdminUserService) GetUserStats(ctx context.Context) (map[string]int64, error) {
-	return s.userRepo.GetUserStats(ctx)
+func (s *AdminUserService) GetUserStats(ctx context.Context) (*model.UserStats, error) {
+	stats, err := s.userRepo.GetUserStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UserStats{
+		TotalUsers:     stats["total"],
+		ActiveUsers:    stats["active"],
+		BlockedUsers:   stats["blocked"],
+		UnverifiedUsers: stats["pending"],
+	}, nil
 }
 
 func (s *AdminUserService) DeleteUser(ctx context.Context, id uuid.UUID, adminID uuid.UUID) error {

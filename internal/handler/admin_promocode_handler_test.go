@@ -27,9 +27,9 @@ func (m *adminPromocodeServiceMock) GetAllPromocodes(ctx context.Context, page, 
 	return resp, args.Int(1), args.Error(2)
 }
 
-func (m *adminPromocodeServiceMock) GetPromocodeDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (m *adminPromocodeServiceMock) GetPromocodeDetail(ctx context.Context, id uuid.UUID) (*model.PromocodeDetail, error) {
 	args := m.Called(ctx, id)
-	resp, _ := args.Get(0).(map[string]interface{})
+	resp, _ := args.Get(0).(*model.PromocodeDetail)
 	return resp, args.Error(1)
 }
 
@@ -49,9 +49,9 @@ func (m *adminPromocodeServiceMock) BulkDeactivate(ctx context.Context, ids []uu
 	return args.Error(0)
 }
 
-func (m *adminPromocodeServiceMock) GetPromocodesStats(ctx context.Context) (map[string]int64, error) {
+func (m *adminPromocodeServiceMock) GetPromocodesStats(ctx context.Context) (*model.PromocodesStats, error) {
 	args := m.Called(ctx)
-	resp, _ := args.Get(0).(map[string]int64)
+	resp, _ := args.Get(0).(*model.PromocodesStats)
 	return resp, args.Error(1)
 }
 
@@ -134,7 +134,9 @@ func TestAdminPromocodeHandlerGetPromocodeDetailSuccess(t *testing.T) {
 
 	promoID := uuid.New()
 	svc.On("GetPromocodeDetail", mock.Anything, promoID).
-		Return(map[string]interface{}{"id": promoID.String(), "code": "TEST10"}, nil).Once()
+		Return(&model.PromocodeDetail{
+			Promocode: model.Promocode{ID: promoID, Code: "TEST10"},
+		}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/promocodes/"+promoID.String(), nil)
 
@@ -166,7 +168,7 @@ func TestAdminPromocodeHandlerGetPromocodeDetailNotFound(t *testing.T) {
 
 	promoID := uuid.New()
 	svc.On("GetPromocodeDetail", mock.Anything, promoID).
-		Return((map[string]interface{})(nil), repository.ErrPromocodeNotFound).Once()
+		Return((*model.PromocodeDetail)(nil), repository.ErrPromocodeNotFound).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/promocodes/"+promoID.String(), nil)
 
@@ -184,7 +186,7 @@ func TestAdminPromocodeHandlerGetPromocodeDetailInternalError(t *testing.T) {
 
 	promoID := uuid.New()
 	svc.On("GetPromocodeDetail", mock.Anything, promoID).
-		Return((map[string]interface{})(nil), errors.New("db error")).Once()
+		Return((*model.PromocodeDetail)(nil), errors.New("db error")).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/promocodes/"+promoID.String(), nil)
 
@@ -407,12 +409,12 @@ func TestAdminPromocodeHandlerGetPromocodesStatsSuccess(t *testing.T) {
 	router.GET("/admin/promocodes/stats", h.GetPromocodesStats)
 
 	svc.On("GetPromocodesStats", mock.Anything).
-		Return(map[string]int64{"total": 10}, nil).Once()
+		Return(&model.PromocodesStats{TotalPromocodes: 10}, nil).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/promocodes/stats", nil)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), `"total":10`)
+	assert.Contains(t, w.Body.String(), "\"total_promocodes\":10")
 	svc.AssertExpectations(t)
 }
 
@@ -424,7 +426,7 @@ func TestAdminPromocodeHandlerGetPromocodesStatsInternalError(t *testing.T) {
 	router.GET("/admin/promocodes/stats", h.GetPromocodesStats)
 
 	svc.On("GetPromocodesStats", mock.Anything).
-		Return((map[string]int64)(nil), errors.New("db error")).Once()
+		Return((*model.PromocodesStats)(nil), errors.New("db error")).Once()
 
 	w := performJSONRequest(router, http.MethodGet, "/admin/promocodes/stats", nil)
 

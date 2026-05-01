@@ -32,7 +32,7 @@ func (s *AdminBookingService) GetAllBookings(ctx context.Context, page, limit in
 	return s.bookingRepo.GetAllBookings(ctx, page, limit, status, userID, eventID)
 }
 
-func (s *AdminBookingService) GetBookingDetail(ctx context.Context, id uuid.UUID) (map[string]interface{}, error) {
+func (s *AdminBookingService) GetBookingDetail(ctx context.Context, id uuid.UUID) (*model.BookingDetail, error) {
 	booking, err := s.bookingRepo.GetBookingByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -41,26 +41,10 @@ func (s *AdminBookingService) GetBookingDetail(ctx context.Context, id uuid.UUID
 	seats, _ := s.bookingRepo.GetBookingSeats(ctx, id)
 	payment, _ := s.bookingRepo.GetBookingPayment(ctx, id)
 
-	detail := map[string]interface{}{
-		"booking": map[string]interface{}{
-			"id":           booking.ID,
-			"user_id":      booking.UserID,
-			"user_email":   booking.Email,
-			"user_name":    booking.Name,
-			"event_id":     booking.EventID,
-			"event_title":  booking.EventTitle,
-			"event_date":   booking.EventDate,
-			"event_venue":  booking.EventVenue,
-			"total_amount": booking.TotalAmount,
-			"discount":     booking.Discount,
-			"final_amount": booking.FinalAmount,
-			"status":       booking.Status,
-			"expires_at":   booking.ExpiresAt,
-			"paid_at":      booking.PaidAt,
-			"created_at":   booking.CreatedAt,
-		},
-		"seats":   seats,
-		"payment": payment,
+	detail := &model.BookingDetail{
+		Booking: *booking,
+		Seats:   seats,
+		Payment: payment,
 	}
 
 	return detail, nil
@@ -131,13 +115,16 @@ func (s *AdminBookingService) RefundBooking(ctx context.Context, id uuid.UUID) e
 	return s.bookingRepo.RefundPayment(ctx, payment.ID)
 }
 
-func (s *AdminBookingService) GetBookingsStats(ctx context.Context) (map[string]interface{}, error) {
+func (s *AdminBookingService) GetBookingsStats(ctx context.Context) (*model.BookingsStats, error) {
 	bookingStats, _ := s.bookingRepo.GetBookingsStats(ctx)
 	revenueStats, _ := s.bookingRepo.GetRevenueStats(ctx)
 
-	return map[string]interface{}{
-		"bookings": bookingStats,
-		"revenue":  revenueStats,
+	return &model.BookingsStats{
+		TotalBookings:     bookingStats["total"],
+		PendingBookings:   bookingStats["pending"],
+		ConfirmedBookings: bookingStats["confirmed"],
+		CancelledBookings: bookingStats["cancelled"],
+		TotalRevenue:      revenueStats["total"],
 	}, nil
 }
 

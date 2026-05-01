@@ -25,12 +25,12 @@ func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 }
 
 // Register godoc
-// @Summary Register a new user
-// @Description Register a new user with email and password
+// @Summary [RU] Регистрация пользователя / [EN] User registration
+// @Description [RU] Создает новый аккаунт пользователя. / [EN] Creates a new user account.
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param user body model.CreateUserRequest true "User Registration Info"
+// @Param user body model.CreateUserRequest true "[RU] Данные пользователя / [EN] User data"
 // @Success 201 {object} model.User
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
@@ -58,12 +58,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login godoc
-// @Summary Login user
-// @Description Login user with email and password
+// @Summary [RU] Вход в систему / [EN] User login
+// @Description [RU] Аутентификация пользователя по email и паролю. / [EN] User authentication by email and password.
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param credentials body model.LoginRequest true "User Login Credentials"
+// @Param credentials body model.LoginRequest true "[RU] Учетные данные / [EN] Credentials"
 // @Success 200 {object} LoginResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
@@ -91,12 +91,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // RefreshToken godoc
-// @Summary Refresh access token
-// @Description Refresh access token using refresh token
+// @Summary [RU] Обновить токен / [EN] Refresh token
+// @Description [RU] Получение нового access токена с помощью refresh токена. / [EN] Getting a new access token using a refresh token.
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param request body object{refresh_token=string} true "Refresh Token"
+// @Param request body object{refresh_token=string} true "[RU] Токен обновления / [EN] Refresh token"
 // @Success 200 {object} LoginResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
@@ -125,8 +125,8 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 // GetProfile godoc
-// @Summary Get user profile
-// @Description Get current user profile info
+// @Summary [RU] Профиль пользователя / [EN] User profile
+// @Description [RU] Получение данных текущего авторизованного пользователя. / [EN] Getting current authorized user data.
 // @Tags auth
 // @Accept  json
 // @Produce  json
@@ -153,6 +153,19 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// UpdateProfile godoc
+// @Summary [RU] Обновить профиль / [EN] Update profile
+// @Description [RU] Изменение персональных данных пользователя. / [EN] Changing user personal data.
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param user body model.UpdateUserRequest true "[RU] Данные для обновления / [EN] Update data"
+// @Success 200 {object} model.User
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Security BearerAuth
+// @Router /auth/profile [put]
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -184,12 +197,12 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 }
 
 // ChangePassword godoc
-// @Summary Change user password
-// @Description Change current user password
+// @Summary [RU] Изменить пароль / [EN] Change password
+// @Description [RU] Обновление пароля текущего пользователя. / [EN] Updating current user password.
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param request body model.ChangePasswordRequest true "Change Password Request"
+// @Param request body model.ChangePasswordRequest true "[RU] Запрос на смену пароля / [EN] Change password request"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
@@ -229,6 +242,16 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
 }
 
+// DeactivateProfile godoc
+// @Summary [RU] Деактивировать профиль / [EN] Deactivate profile
+// @Description [RU] Отключает аккаунт текущего пользователя. / [EN] Disables the current user account.
+// @Tags auth
+// @Produce  json
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /auth/profile [delete]
 func (h *AuthHandler) DeactivateProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -248,6 +271,17 @@ func (h *AuthHandler) DeactivateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "account deactivated successfully"})
 }
 
+// ValidateEmail godoc
+// @Summary [RU] Проверить email / [EN] Validate email
+// @Description [RU] Проверяет доступен ли email для регистрации. / [EN] Checks if an email is available for registration.
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param email query string true "[RU] Email для проверки / [EN] Email to check"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/validate-email [get]
 func (h *AuthHandler) ValidateEmail(c *gin.Context) {
 	var req model.ValidateEmailRequest
 	if err := c.ShouldBind(&req); err != nil {

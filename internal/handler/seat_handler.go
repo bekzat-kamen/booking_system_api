@@ -18,6 +18,20 @@ func NewSeatHandler(seatService service.SeatServiceInterface) *SeatHandler {
 	return &SeatHandler{seatService: seatService}
 }
 
+// GenerateSeats godoc
+// @Summary [RU] Генерация мест / [EN] Generate seats
+// @Description [RU] Автоматически генерирует сетку мест для мероприятия. / [EN] Automatically generates a seat grid for an event.
+// @Tags seats
+// @Accept  json
+// @Produce  json
+// @Param id path string true "[RU] ID мероприятия / [EN] Event ID"
+// @Param request body model.GenerateSeatsRequest true "[RU] Конфигурация мест / [EN] Seat configuration"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Security BearerAuth
+// @Router /events/{id}/seats/generate [post]
 func (h *SeatHandler) GenerateSeats(c *gin.Context) {
 	organizerID, exists := c.Get("user_id")
 	if !exists {
@@ -58,6 +72,15 @@ func (h *SeatHandler) GenerateSeats(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "seats generated successfully"})
 }
 
+// GetSeatMap godoc
+// @Summary [RU] Карта мест / [EN] Seat map
+// @Description [RU] Возвращает карту всех мест мероприятия с их статусами. / [EN] Returns a map of all event seats with their statuses.
+// @Tags seats
+// @Produce  json
+// @Param id path string true "[RU] ID мероприятия / [EN] Event ID"
+// @Success 200 {array} model.Seat
+// @Failure 404 {object} map[string]string
+// @Router /events/{id}/seats/map [get]
 func (h *SeatHandler) GetSeatMap(c *gin.Context) {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -78,6 +101,15 @@ func (h *SeatHandler) GetSeatMap(c *gin.Context) {
 	c.JSON(http.StatusOK, seatMap)
 }
 
+// GetAvailableSeats godoc
+// @Summary [RU] Доступные места / [EN] Available seats
+// @Description [RU] Возвращает список только свободных мест. / [EN] Returns a list of only available seats.
+// @Tags seats
+// @Produce  json
+// @Param id path string true "[RU] ID мероприятия / [EN] Event ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /events/{id}/seats/available [get]
 func (h *SeatHandler) GetAvailableSeats(c *gin.Context) {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
