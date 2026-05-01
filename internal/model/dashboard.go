@@ -36,24 +36,24 @@ type DashboardStats struct {
 }
 
 type RevenueByDay struct {
-	Date   string  `json:"date"`
-	Amount float64 `json:"amount"`
+	Date   string  `json:"date" db:"date"`
+	Amount float64 `json:"amount" db:"amount"`
 }
 
 type TopEvent struct {
-	EventID   uuid.UUID `json:"event_id"`
-	Title     string    `json:"title"`
-	Bookings  int64     `json:"bookings"`
-	Revenue   float64   `json:"revenue"`
-	EventDate time.Time `json:"event_date"`
+	EventID   uuid.UUID `json:"event_id" db:"event_id"`
+	Title     string    `json:"title" db:"title"`
+	Bookings  int64     `json:"bookings" db:"bookings"`
+	Revenue   float64   `json:"revenue" db:"revenue"`
+	EventDate time.Time `json:"event_date" db:"event_date"`
 }
 
 type RecentActivity struct {
-	ID        uuid.UUID `json:"id"`
-	Action    string    `json:"action"`
-	Entity    string    `json:"entity"`
-	UserEmail string    `json:"user_email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	Action    string    `json:"action" db:"action"`
+	Entity    string    `json:"entity" db:"entity"`
+	UserEmail string    `json:"user_email" db:"user_email"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
 type DashboardResponse struct {

@@ -151,10 +151,5 @@ func (r *DashboardRepository) GetRecentActivities(ctx context.Context, limit int
 
 	var result []model.RecentActivity
 	err := r.db.SelectContext(ctx, &result, query, limit)
-	if err != nil {
-
-		return []model.RecentActivity{}, nil
-	}
-
 	return result, err
 }
