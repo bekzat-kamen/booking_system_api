@@ -23,7 +23,7 @@ func setupPaymentMock(t *testing.T) (*PaymentRepository, sqlmock.Sqlmock, func()
 	repo := NewPaymentRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

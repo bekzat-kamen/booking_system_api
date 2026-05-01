@@ -23,7 +23,7 @@ func setupSeatMock(t *testing.T) (*SeatRepository, sqlmock.Sqlmock, func()) {
 	repo := NewSeatRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

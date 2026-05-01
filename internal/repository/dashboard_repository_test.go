@@ -18,7 +18,7 @@ func setupDashboardMock(t *testing.T) (*DashboardRepository, sqlmock.Sqlmock, fu
 	repo := NewDashboardRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

@@ -23,7 +23,7 @@ func setupPromocodeMock(t *testing.T) (*PromocodeRepository, sqlmock.Sqlmock, fu
 	repo := NewPromocodeRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

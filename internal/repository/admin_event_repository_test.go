@@ -19,7 +19,7 @@ func setupAdminEventMock(t *testing.T) (*AdminEventRepository, sqlmock.Sqlmock, 
 	repo := NewAdminEventRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

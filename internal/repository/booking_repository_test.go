@@ -23,7 +23,7 @@ func setupBookingMock(t *testing.T) (*BookingRepository, sqlmock.Sqlmock, func()
 	repo := NewBookingRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 
@@ -48,7 +48,7 @@ func TestBookingRepository_Create(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mock.ExpectBegin()
-		
+
 		mock.ExpectExec(regexp.QuoteMeta("INSERT INTO bookings")).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 

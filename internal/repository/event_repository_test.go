@@ -23,7 +23,7 @@ func setupEventMock(t *testing.T) (*EventRepository, sqlmock.Sqlmock, func()) {
 	repo := NewEventRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

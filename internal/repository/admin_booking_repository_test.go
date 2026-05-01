@@ -19,7 +19,7 @@ func setupAdminBookingMock(t *testing.T) (*AdminBookingRepository, sqlmock.Sqlmo
 	repo := NewAdminBookingRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

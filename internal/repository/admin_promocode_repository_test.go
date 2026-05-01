@@ -19,7 +19,7 @@ func setupAdminPromocodeMock(t *testing.T) (*AdminPromocodeRepository, sqlmock.S
 	repo := NewAdminPromocodeRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

@@ -19,7 +19,7 @@ func setupAdminUserMock(t *testing.T) (*AdminUserRepository, sqlmock.Sqlmock, fu
 	repo := NewAdminUserRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 
@@ -61,7 +61,7 @@ func TestAdminUserRepository_GetUserStats(t *testing.T) {
 	defer cleanup()
 
 	mock.MatchExpectationsInOrder(false)
-	
+
 	mock.ExpectQuery("SELECT COUNT(*) FROM users").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(10))
 	mock.ExpectQuery("SELECT COUNT(*) FROM users WHERE status = 'active'").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
 	mock.ExpectQuery("SELECT COUNT(*) FROM users WHERE status = 'blocked'").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(2))

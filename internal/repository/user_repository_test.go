@@ -23,7 +23,7 @@ func setupUserMock(t *testing.T) (*UserRepository, sqlmock.Sqlmock, func()) {
 	repo := NewUserRepository(sqlxDB)
 
 	return repo, mock, func() {
-		db.Close()
+		_ = db.Close()
 	}
 }
 
@@ -61,7 +61,7 @@ func TestUserRepository_Create(t *testing.T) {
 	t.Run("Already Exists", func(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users")).
 			WillReturnError(sql.ErrNoRows) // Just to trigger some error, wait
-		
+
 		// Actually isUniqueViolation checks error message
 		mock.ExpectExec(regexp.QuoteMeta("INSERT INTO users")).
 			WillReturnError(sql.ErrConnDone) // Another error
