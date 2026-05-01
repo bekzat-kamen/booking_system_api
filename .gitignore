@@ -9,7 +9,7 @@ bin/
 # Тесты и покрытие
 *.test
 *.out
-coverage
+coverage*
 coverage.txt
 
 # Зависимости
